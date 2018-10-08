@@ -23,7 +23,7 @@
     "@essential-projects/iam_contracts": "3.1.1",
     "@process-engine/external_task_api_contracts": "feature~fix_ts_implementation",
     "async-middleware": "1.2.1",
-    "bluebird": "3.5.1",
+    "bluebird": "3.5.2",
     "loggerhythm": "3.0.3"
   },
   "devDependencies": {
