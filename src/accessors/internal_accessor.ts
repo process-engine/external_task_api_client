@@ -14,16 +14,19 @@ export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
     this._externalApiService = externalApiService;
   }
 
-  public async fetchAndLockExternalTasks(identity: IIdentity,
-                                         workerId: string,
-                                         topicName: string,
-                                         maxTasks: number,
-                                         longPollingTimeout: number,
-                                         lockDuration: number): Promise<Array<ExternalTask>> {
+  public async fetchAndLockExternalTasks<TPayloadType>(identity: IIdentity,
+                                                       workerId: string,
+                                                       topicName: string,
+                                                       maxTasks: number,
+                                                       longPollingTimeout: number,
+                                                       lockDuration: number,
+                                                      ): Promise<Array<ExternalTask<TPayloadType>>> {
 
     this._ensureIsAuthorized(identity);
 
-    return this._externalApiService.fetchAndLockExternalTasks(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);
+    return this
+      ._externalApiService
+      .fetchAndLockExternalTasks<TPayloadType>(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);
   }
 
   public async extendLock(identity: IIdentity, workerId: string, externalTaskId: string, additionalDuration: number): Promise<void> {
@@ -51,7 +54,10 @@ export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
     return this._externalApiService.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
   }
 
-  public async finishExternalTask(identity: IIdentity, workerId: string, externalTaskId: string, payload: any): Promise<void> {
+  public async finishExternalTask<TResultType>(identity: IIdentity,
+                                               workerId: string,
+                                               externalTaskId: string,
+                                               payload: TResultType): Promise<void> {
 
     this._ensureIsAuthorized(identity);
 

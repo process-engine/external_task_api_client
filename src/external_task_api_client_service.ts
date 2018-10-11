@@ -14,13 +14,16 @@ export class ExternalTaskApiClientService implements IExternalTaskApi {
     this._externalApiAccessor = externalApiAccessor;
   }
 
-  public async fetchAndLockExternalTasks(identity: IIdentity,
-                                         workerId: string,
-                                         topicName: string,
-                                         maxTasks: number,
-                                         longPollingTimeout: number,
-                                         lockDuration: number): Promise<Array<ExternalTask>> {
-    return this._externalApiAccessor.fetchAndLockExternalTasks(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);
+  public async fetchAndLockExternalTasks<TPayloadType>(identity: IIdentity,
+                                                       workerId: string,
+                                                       topicName: string,
+                                                       maxTasks: number,
+                                                       longPollingTimeout: number,
+                                                       lockDuration: number,
+                                                      ): Promise<Array<ExternalTask<TPayloadType>>> {
+    return this
+      ._externalApiAccessor
+      .fetchAndLockExternalTasks<TPayloadType>(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);
   }
 
   public async extendLock(identity: IIdentity, workerId: string, externalTaskId: string, additionalDuration: number): Promise<void> {
@@ -39,7 +42,7 @@ export class ExternalTaskApiClientService implements IExternalTaskApi {
     return this._externalApiAccessor.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
   }
 
-  public async finishExternalTask(identity: IIdentity, workerId: string, externalTaskId: string, payload: any): Promise<void> {
-    return this._externalApiAccessor.finishExternalTask(identity, workerId, externalTaskId, payload);
+  public async finishExternalTask<TResultType>(identity: IIdentity, workerId: string, externalTaskId: string, payload: TResultType): Promise<void> {
+    return this._externalApiAccessor.finishExternalTask<TResultType>(identity, workerId, externalTaskId, payload);
   }
 }
