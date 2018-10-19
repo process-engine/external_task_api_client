@@ -26,13 +26,11 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     handleAction: HandleExternalTaskAction<TPayload>): Promise<void> {
 
     const externalTasks: Array<ExternalTask<TPayload>> =
-      await this._externalTaskApi.fetchAndLockExternalTasks<TPayload>(
+      await this._fetchAndLockExternalTasks<TPayload>(
         identity,
-        this._workerId,
         topic,
         maxTasks,
-        longpollingTimeout,
-        this._lockDuration
+        longpollingTimeout
       );
 
     for (const externalTask of externalTasks) {
@@ -47,5 +45,32 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     }
 
     await this.waitForAndHandle(identity, topic, maxTasks, longpollingTimeout, handleAction);
+  }
+
+  private async _fetchAndLockExternalTasks<TPayload>(
+    identity: IIdentity,
+    topic: string,
+    maxTasks: number,
+    longpollingTimeout: number): Promise<Array<ExternalTask<TPayload>>> {
+
+    try {
+      return await this._externalTaskApi.fetchAndLockExternalTasks<TPayload>(
+        identity,
+        this._workerId,
+        topic,
+        maxTasks,
+        longpollingTimeout,
+        this._lockDuration
+      );
+    } catch (exception) {
+      await this._sleep(1000);
+      await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+    }
+  }
+
+  private async _sleep(milliseconds: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), milliseconds);
+    });
   }
 }
