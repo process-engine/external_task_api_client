@@ -64,7 +64,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       );
     } catch (exception) {
       await this._sleep(1000);
-      await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+      return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
     }
   }
 
