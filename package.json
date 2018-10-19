@@ -24,7 +24,8 @@
     "@process-engine/external_task_api_contracts": "feature~add_external_task_worker",
     "async-middleware": "1.2.1",
     "bluebird": "3.5.2",
-    "loggerhythm": "3.0.3"
+    "loggerhythm": "3.0.3",
+    "uuid": "3.3.2"
   },
   "devDependencies": {
     "@essential-projects/tslint-config": "1.1.2",
