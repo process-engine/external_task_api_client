@@ -39,16 +39,13 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
     const timeout = setTimeout(async () => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
 
+    const executeTaskPromises: Promise<void>[] = [];
+
     for (const externalTask of externalTasks) {
-      try {
-
-        const result: IHandleExternalTaskResult = await handleAction(externalTask);
-        await result.applyTo(this._externalTaskApi, identity, this._workerId);
-
-      } catch (exception) {
-        await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, exception.message, '');
-      }
+      executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
     }
+
+    Promise.all(executeTaskPromises);
 
     clearTimeout(timeout);
 
@@ -73,6 +70,21 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     } catch (exception) {
       await this._sleep(1000);
       return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+    }
+  }
+
+  private async _executeExternalTask<TPayload>(
+    identity: IIdentity,
+    externalTask: ExternalTask<TPayload>,
+    handleAction: HandleExternalTaskAction<TPayload>): Promise<void> {
+
+    try {
+
+      const result: IHandleExternalTaskResult = await handleAction(externalTask);
+      await result.applyTo(this._externalTaskApi, identity, this._workerId);
+
+    } catch (exception) {
+      await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, exception.message, '');
     }
   }
 
