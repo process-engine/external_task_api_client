@@ -18,6 +18,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     this._externalTaskApi = externalTaskApi;
   }
 
+  public get WorkerId(): string {
+    return this._workerId;
+  }
+
   public async waitForAndHandle<TPayload, TResult>(
     identity: IIdentity,
     topic: string,
@@ -33,6 +37,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         longpollingTimeout
       );
 
+    const timeout = setTimeout(async () => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
+
     for (const externalTask of externalTasks) {
       try {
 
@@ -43,6 +49,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, exception.message, '');
       }
     }
+
+    clearTimeout(timeout);
 
     await this.waitForAndHandle(identity, topic, maxTasks, longpollingTimeout, handleAction);
   }
@@ -65,6 +73,12 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     } catch (exception) {
       await this._sleep(1000);
       return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+    }
+  }
+
+  private async _extendLocks(identity: IIdentity, externalTasks: Array<ExternalTask<any>>): Promise<void> {
+    for (const externalTask of externalTasks) {
+      await this._externalTaskApi.extendLock(identity, this._workerId, externalTask.id, this._lockDuration);
     }
   }
 
