@@ -45,7 +45,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
     }
 
-    Promise.all(executeTaskPromises);
+    await Promise.all(executeTaskPromises);
 
     clearTimeout(timeout);
 
