@@ -25,34 +25,35 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     return this._workerId;
   }
 
-  public async waitForAndHandle<TPayload, TResult>(
+  public async waitForAndHandle<TPayload>(
     identity: IIdentity,
     topic: string,
     maxTasks: number,
     longpollingTimeout: number,
     handleAction: HandleExternalTaskAction<TPayload>): Promise<void> {
 
-    const externalTasks: Array<ExternalTask<TPayload>> =
-      await this._fetchAndLockExternalTasks<TPayload>(
-        identity,
-        topic,
-        maxTasks,
-        longpollingTimeout
-      );
+    while (true) {
 
-    const timeout = setTimeout(async () => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
+      const externalTasks: Array<ExternalTask<TPayload>> =
+        await this._fetchAndLockExternalTasks<TPayload>(
+          identity,
+          topic,
+          maxTasks,
+          longpollingTimeout
+        );
 
-    const executeTaskPromises: Promise<void>[] = [];
+      const interval = setInterval(async () => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
 
-    for (const externalTask of externalTasks) {
-      executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
+      const executeTaskPromises: Promise<void>[] = [];
+
+      for (const externalTask of externalTasks) {
+        executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
+      }
+
+      await Promise.all(executeTaskPromises);
+
+      clearInterval(interval);
     }
-
-    await Promise.all(executeTaskPromises);
-
-    clearTimeout(timeout);
-
-    await this.waitForAndHandle(identity, topic, maxTasks, longpollingTimeout, handleAction);
   }
 
   private async _fetchAndLockExternalTasks<TPayload>(
