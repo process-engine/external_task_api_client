@@ -5,7 +5,7 @@ import {
   HandleExternalTaskAction,
   IExternalTaskWorker,
   IExternalTaskApi,
-  IHandleExternalTaskResult
+  IExternalTaskResult
 } from '@process-engine/external_task_api_contracts';
 import {IIdentity} from '@essential-projects/iam_contracts';
 
@@ -18,7 +18,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     this._externalTaskApi = externalTaskApi;
   }
 
-  public get WorkerId(): string {
+  public get workerId(): string {
     return this._workerId;
   }
 
@@ -80,8 +80,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
     try {
 
-      const result: IHandleExternalTaskResult = await handleAction(externalTask);
-      await result.applyTo(this._externalTaskApi, identity, this._workerId);
+      const result: IExternalTaskResult = await handleAction(externalTask);
+      await result.sendToExternalTaskApi(this._externalTaskApi, identity, this._workerId);
 
     } catch (exception) {
       await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, exception.message, '');
