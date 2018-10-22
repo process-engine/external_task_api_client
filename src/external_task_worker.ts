@@ -1,3 +1,4 @@
+import {Logger} from 'loggerhythm';
 import * as uuid from 'uuid';
 
 import {
@@ -8,6 +9,8 @@ import {
   IExternalTaskResult
 } from '@process-engine/external_task_api_contracts';
 import {IIdentity} from '@essential-projects/iam_contracts';
+
+const logger: Logger = Logger.createLogger('pprocessengine:external_task:worker');
 
 export class ExternalTaskWorker implements IExternalTaskWorker {
   private readonly _workerId: string = uuid.v4();
@@ -67,7 +70,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         longpollingTimeout,
         this._lockDuration
       );
-    } catch (exception) {
+    } catch (error) {
+
+      logger.error(error);
+
       await this._sleep(1000);
       return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
     }
@@ -83,8 +89,9 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       const result: IExternalTaskResult = await handleAction(externalTask);
       await result.sendToExternalTaskApi(this._externalTaskApi, identity, this._workerId);
 
-    } catch (exception) {
-      await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, exception.message, '');
+    } catch (error) {
+      logger.error(error);
+      await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, error.message, '');
     }
   }
 
