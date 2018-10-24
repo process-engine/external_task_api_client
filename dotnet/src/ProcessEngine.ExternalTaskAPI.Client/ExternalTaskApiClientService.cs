@@ -23,6 +23,13 @@
         public ExternalTaskApiClientService(HttpClient httpClient)
         {
             this.httpClient = httpClient;
+            this.ConfigureHttpClient();
+        }
+
+        private void ConfigureHttpClient()
+        {
+            this.httpClient.DefaultRequestHeaders.Accept.Clear();
+            this.httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
         public async Task ExtendLock(IIdentity identity, string workerId, string externalTaskId, int additionalDuration)
@@ -109,7 +116,7 @@
 
             StringContent content = GetRequestAsStringContent(request);
 
-            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
+            HttpResponseMessage response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
 
             response.EnsureSuccessStatusCode();
 
@@ -122,7 +129,7 @@
 
             StringContent content = GetRequestAsStringContent(request);
 
-            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
+            HttpResponseMessage response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
 
             response.EnsureSuccessStatusCode();
         }
@@ -134,7 +141,7 @@
 
         private StringContent GetRequestAsStringContent<TRequest>(TRequest request)
         {
-            var settings = new JsonSerializerSettings
+            JsonSerializerSettings settings = new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };

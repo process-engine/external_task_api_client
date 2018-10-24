@@ -14,6 +14,8 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     public class ExternalTaskWorker : IExternalTaskWorker
     {
         private const int LockDurationInMilliseconds = 30000;
+        private const int RefreshLockInMilliseconds = LockDurationInMilliseconds - 5000;
+
         private readonly IExternalTaskAPI externalTaskAPI;
 
         /// <summary>
@@ -59,9 +61,14 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         {
             while (true)
             {
-                var externalTasks = await this.FetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+                IEnumerable<ExternalTask<TPayload>> externalTasks = await this.FetchAndLockExternalTasks<TPayload>(
+                    identity,
+                    topic,
+                    maxTasks,
+                    longpollingTimeout
+                );
 
-                Timer timer = this.StartExtendLockTimer(identity, externalTasks, LockDurationInMilliseconds - 5000);
+                Timer timer = this.StartExtendLockTimer(identity, externalTasks, RefreshLockInMilliseconds);
 
                 IList<Task> tasks = new List<Task>();
 
@@ -107,7 +114,10 @@ namespace ProcessEngine.ExternalTaskAPI.Client
             catch (Exception exception)
             {
                 Console.WriteLine(exception);
-                await Task.Delay(1000);
+
+                int millisecondsBeforeNextTry = 1000;
+                await Task.Delay(millisecondsBeforeNextTry);
+
                 return await this.FetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
             }
         }
@@ -128,7 +138,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
             catch (Exception exception)
             {
                 Console.WriteLine(exception);
-                await this.externalTaskAPI.HandleServiceError(identity, WorkerId, externalTask.Id, exception.Message, exception.StackTrace);
+                await this.externalTaskAPI.HandleServiceError(identity, this.WorkerId, externalTask.Id, exception.Message, exception.StackTrace);
             }
         }
 
@@ -136,7 +146,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         {
             foreach (ExternalTask<TPayload> externalTask in externalTasks)
             {
-                await this.externalTaskAPI.ExtendLock(identity, WorkerId, externalTask.Id, LockDurationInMilliseconds);
+                await this.externalTaskAPI.ExtendLock(identity, this.WorkerId, externalTask.Id, LockDurationInMilliseconds);
             }
         }
     }

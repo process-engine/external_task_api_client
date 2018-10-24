@@ -15,10 +15,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client.Tests
         public async void HandleExternalTask()
         {
             IIdentity identity = new TestIdentity();
-            var client = new HttpClient();
-
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            HttpClient client = new HttpClient();
             client.BaseAddress = new Uri("http://localhost:8000");
 
             IExternalTaskAPI externalTaskApi = new ExternalTaskApiClientService(client);
