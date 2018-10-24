@@ -70,16 +70,21 @@ namespace ProcessEngine.ExternalTaskAPI.Client
 
                 Timer timer = this.StartExtendLockTimer(identity, externalTasks, RefreshLockInMilliseconds);
 
-                IList<Task> tasks = new List<Task>();
-
-                foreach (ExternalTask<TPayload> externalTask in externalTasks)
+                try
                 {
-                    tasks.Add(this.ExecuteExternalTask<TPayload>(identity, externalTask, handleAction));
+                    IList<Task> tasks = new List<Task>();
+
+                    foreach (ExternalTask<TPayload> externalTask in externalTasks)
+                    {
+                        tasks.Add(this.ExecuteExternalTask<TPayload>(identity, externalTask, handleAction));
+                    }
+
+                    await Task.WhenAll(tasks);
                 }
-
-                await Task.WhenAll(tasks);
-
-                timer.Stop();
+                finally
+                {
+                    timer.Stop();
+                }
             }
         }
 
