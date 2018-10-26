@@ -41,9 +41,9 @@ pipeline {
       }
     }
     stage('publish') {
-      when {
-        branch 'master'
-      }
+//      when {
+//        branch 'master'
+//      }
       steps {
         dir('dotnet') {
           sh('dotnet --version')
