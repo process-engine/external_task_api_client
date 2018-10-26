@@ -1,0 +1,73 @@
+#!/usr/bin/env groovy
+
+def cleanup_workspace() {
+  cleanWs()
+  dir("${env.WORKSPACE}@tmp") {
+    deleteDir()
+  }
+  dir("${env.WORKSPACE}@script") {
+    deleteDir()
+  }
+  dir("${env.WORKSPACE}@script@tmp") {
+    deleteDir()
+  }
+}
+
+pipeline {
+  agent {
+    docker {
+      image 'microsoft/dotnet:2.1-sdk'
+    }
+  }
+  environment {
+    HOME = "$WORKSPACE"
+  }
+
+  stages {
+    stage('prepare') {
+      steps {
+        dir('dotnet') {
+          sh('dotnet --version')
+          sh('dotnet restore src/ProcessEngine.ExternalTaskAPI.Client')
+        }
+      }
+    }
+    stage('build') {
+      steps {
+        dir('dotnet') {
+          sh('dotnet --version')
+          sh('dotnet build --configuration Release src/ProcessEngine.ExternalTaskAPI.Client')
+        }
+      }
+    }
+    stage('publish') {
+      when {
+        branch 'master'
+      }
+      steps {
+        dir('dotnet') {
+          sh('dotnet --version')
+          withCredentials([string(credentialsId: 'process_engine_public', variable: 'PROCESS_ENGINE_PUBLIC')]) {
+            sh("dotnet nuget push src/ProcessEngine.ExternalTaskAPI.Client/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
+          }
+        }
+      }
+    }
+    stage('cleanup') {
+      steps {
+        script {
+          // this stage just exists, so the cleanup-work that happens in the post-script
+          // will show up in its own stage in Blue Ocean
+          sh(script: ':', returnStdout: true);
+        }
+      }
+    }
+  }
+  post {
+    always {
+      script {
+        cleanup_workspace();
+      }
+    }
+  }
+}
