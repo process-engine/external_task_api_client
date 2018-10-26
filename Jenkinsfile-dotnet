@@ -47,7 +47,7 @@ pipeline {
       steps {
         dir('dotnet') {
           sh('dotnet --version')
-          withCredentials([string(credentialsId: 'process_engine_public', variable: 'PROCESS_ENGINE_PUBLIC')]) {
+          withCredentials([string(credentialsId: 'myget_process_engine_public_feed_token', variable: 'PROCESS_ENGINE_PUBLIC')]) {
             sh("dotnet nuget push src/ProcessEngine.ExternalTaskAPI.Client/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
           }
         }
