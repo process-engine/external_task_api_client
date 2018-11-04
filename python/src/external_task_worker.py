@@ -13,15 +13,14 @@ class ExternalTaskWorker:
         while True:
             externalTasks = await self.__fetchAndLockExternalTasks(identity, topic, maxTasks, longPollingTimeout)
 
-            if len(externalTasks) > 0:
-                tasks = []
+            tasks = []
 
-                for externalTask in externalTasks:
-                    tasks.append(self.__executeExternalTask(
-                        identity, externalTask, handleAction))
+            for externalTask in externalTasks:
+                tasks.append(self.__executeExternalTask(
+                    identity, externalTask, handleAction))
 
-                if len(tasks) > 0:
-                    await asyncio.wait(tasks)
+            if len(tasks) > 0:
+                await asyncio.wait(tasks)
 
     async def __fetchAndLockExternalTasks(self, identity, topicName, maxTasks, longPollingTimeout):
         try:
@@ -30,7 +29,7 @@ class ExternalTaskWorker:
         except Exception as exception:
             print(exception)
 
-            await asyncio.sleep(1000)
+            await asyncio.sleep(1)
             return await self.__fetchAndLockExternalTasks(
                 identity, topicName, maxTasks, longPollingTimeout)
 
