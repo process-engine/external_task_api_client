@@ -5,6 +5,7 @@ npm-debug.log*
 
 # lock-files
 package-lock.json
+Pipfile.lock
 yarn.lock
 
 # build directories
