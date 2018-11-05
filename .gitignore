@@ -12,6 +12,7 @@ yarn.lock
 dist
 obj
 bin
+build
 
 # auto-generated schemas and documentation
 doc
@@ -37,3 +38,5 @@ node_modules
 .classpath
 .project
 .settings/
+
+*.egg-info
