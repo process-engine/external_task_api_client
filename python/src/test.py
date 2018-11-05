@@ -7,6 +7,7 @@ import external_task_worker as etw
 
 async def handle(externalTask):
     print(externalTask)
+    await asyncio.sleep(60)
     return etf.ExternalTaskFinished(externalTask["id"], {"testprop": "Hallo"})
 
 
