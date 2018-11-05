@@ -1,4 +1,4 @@
-# ExternalApiClient written in python
+# ExternalTaskApiClient written in python
 
 This is an ExternalTaskApiClient written in python.
 
@@ -17,7 +17,13 @@ pipenv install
 
 ## Install from pypi.org
 
-Install package from pypi.org
+Install package with pip:
+
+```bash
+pip install external_task_api_client
+```
+
+Install package with pipenv:
 
 ```bash
 pipenv install external_task_api_client
