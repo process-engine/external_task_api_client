@@ -1,6 +1,6 @@
-# ExternalTaskApiClient written in python
+# ExternalTaskApiClient written in Python
 
-This is an ExternalTaskApiClient written in python.
+This is an ExternalTaskApiClient written in Python.
 
 ### Requirements
 
