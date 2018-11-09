@@ -12,6 +12,7 @@ class ExternalTaskApiClientService:
         self.__finish_external_task_uri = 'task/{}/finish'
         self.__handle_bpmn_error_uri = 'task/{}/handle_bpmn_error'
         self.__handle_service_error_uri = 'task/{}/handle_service_error'
+        self.__combined_url = '{}/api/external_task/v1/{}'
 
     async def extend_lock(self, identity, worker_id, external_task_id, additional_duration):
         uri = self.__extend_lock_uri.format(external_task_id)
@@ -63,7 +64,7 @@ class ExternalTaskApiClientService:
         await self.__send_post_to_external_task_api(identity, uri, request)
 
     async def __send_post_to_external_task_api(self, identity, uri, request):
-        headers = {"Authorization": "Bearer " + identity["token"]}
+        headers = self.__get_authorization_header(identity["token"])
         url = self.__combine_with_base_url(uri)
 
         async with aiohttp.ClientSession(headers=headers) as session:
@@ -72,5 +73,11 @@ class ExternalTaskApiClientService:
                 if response.status == 200:
                     return await response.json()
 
+
+    def __get_authorization_header(self, token):
+        """Builds the HTTP header line for authorization; uses the BEARER token format"""
+        return {'Authorization': 'Bearer {}'.format(token)}
+
+
     def __combine_with_base_url(self, uri):
-        return self.__base_url + "/api/external_task/v1/" + uri
+        return self.__combined_url.format(self.__base_url, uri)
