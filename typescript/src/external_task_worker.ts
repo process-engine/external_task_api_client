@@ -1,14 +1,14 @@
 import {Logger} from 'loggerhythm';
 import * as uuid from 'uuid';
 
+import {IIdentity} from '@essential-projects/iam_contracts';
 import {
   ExternalTask,
   HandleExternalTaskAction,
-  IExternalTaskWorker,
   IExternalTaskApi,
-  IExternalTaskResult
+  IExternalTaskResult,
+  IExternalTaskWorker,
 } from '@process-engine/external_task_api_contracts';
-import {IIdentity} from '@essential-projects/iam_contracts';
 
 const logger: Logger = Logger.createLogger('pprocessengine:external_task:worker');
 
@@ -25,26 +25,28 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     return this._workerId;
   }
 
-  public async waitForAndHandle<TPayload>(
-    identity: IIdentity,
-    topic: string,
-    maxTasks: number,
-    longpollingTimeout: number,
-    handleAction: HandleExternalTaskAction<TPayload>): Promise<void> {
+  public async waitForAndHandle<TPayload>(identity: IIdentity,
+                                          topic: string,
+                                          maxTasks: number,
+                                          longpollingTimeout: number,
+                                          handleAction: HandleExternalTaskAction<TPayload>,
+                                         ): Promise<void> {
 
-    while (true) {
+    const keepPolling: boolean = true;
+    while (keepPolling) {
 
       const externalTasks: Array<ExternalTask<TPayload>> =
         await this._fetchAndLockExternalTasks<TPayload>(
           identity,
           topic,
           maxTasks,
-          longpollingTimeout
+          longpollingTimeout,
         );
 
-      const interval = setInterval(async () => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
+      // tslint:disable-next-line:no-magic-numbers
+      const interval: NodeJS.Timeout = setInterval(async() => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
 
-      const executeTaskPromises: Promise<void>[] = [];
+      const executeTaskPromises: Array<Promise<void>> = [];
 
       for (const externalTask of externalTasks) {
         executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
@@ -56,11 +58,11 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     }
   }
 
-  private async _fetchAndLockExternalTasks<TPayload>(
-    identity: IIdentity,
-    topic: string,
-    maxTasks: number,
-    longpollingTimeout: number): Promise<Array<ExternalTask<TPayload>>> {
+  private async _fetchAndLockExternalTasks<TPayload>(identity: IIdentity,
+                                                     topic: string,
+                                                     maxTasks: number,
+                                                     longpollingTimeout: number,
+                                                   ): Promise<Array<ExternalTask<TPayload>>> {
 
     try {
       return await this._externalTaskApi.fetchAndLockExternalTasks<TPayload>(
@@ -69,27 +71,26 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         topic,
         maxTasks,
         longpollingTimeout,
-        this._lockDuration
+        this._lockDuration,
       );
     } catch (error) {
 
       logger.error(error);
-
+      // tslint:disable-next-line:no-magic-numbers
       await this._sleep(1000);
+
       return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
     }
   }
 
-  private async _executeExternalTask<TPayload>(
-    identity: IIdentity,
-    externalTask: ExternalTask<TPayload>,
-    handleAction: HandleExternalTaskAction<TPayload>): Promise<void> {
+  private async _executeExternalTask<TPayload>(identity: IIdentity,
+                                               externalTask: ExternalTask<TPayload>,
+                                               handleAction: HandleExternalTaskAction<TPayload>,
+                                              ): Promise<void> {
 
     try {
-
       const result: IExternalTaskResult = await handleAction(externalTask);
       await result.sendToExternalTaskApi(this._externalTaskApi, identity, this._workerId);
-
     } catch (error) {
       logger.error(error);
       await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, error.message, '');
@@ -103,7 +104,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   }
 
   private async _sleep(milliseconds: number): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>((resolve: Function): void => {
       setTimeout(() => resolve(), milliseconds);
     });
   }
