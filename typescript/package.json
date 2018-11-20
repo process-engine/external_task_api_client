@@ -1,6 +1,6 @@
 {
   "name": "@process-engine/external_task_api_client",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "description": "the api-client package for process-engine-consumer",
   "main": "dist/commonjs/index.js",
   "typings": "dist/index.d.ts",
@@ -21,7 +21,7 @@
     "@essential-projects/errors_ts": "~1.4.0",
     "@essential-projects/http_contracts": "~2.3.0",
     "@essential-projects/iam_contracts": "~3.2.0",
-    "@process-engine/external_task_api_contracts": "~0.4.0",
+    "@process-engine/external_task_api_contracts": "~1.0.0",
     "async-middleware": "1.2.1",
     "loggerhythm": "3.0.3",
     "uuid": "3.3.2"
