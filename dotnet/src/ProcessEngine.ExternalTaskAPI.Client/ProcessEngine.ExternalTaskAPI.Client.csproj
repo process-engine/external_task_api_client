@@ -19,7 +19,7 @@
 
     <ItemGroup>
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-        <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="4.1.0" />
+        <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="5.0.0" />
     </ItemGroup>
 
 </Project>

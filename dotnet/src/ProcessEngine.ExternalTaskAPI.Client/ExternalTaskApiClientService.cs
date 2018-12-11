@@ -7,7 +7,6 @@
     using System.Text;
     using System.Threading.Tasks;
 
-    using Foundation.IAM.Contracts;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
     using ProcessEngine.ExternalTaskAPI.Client.Requests;
@@ -136,7 +135,7 @@
 
         private void SetAuthenticationHeader(IIdentity identity)
         {
-            this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", identity.ToString());
+            this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", identity.Token);
         }
 
         private StringContent GetRequestAsStringContent<TRequest>(TRequest request)

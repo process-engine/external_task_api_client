@@ -4,7 +4,6 @@ namespace ProcessEngine.ExternalTaskAPI.Client.Tests
     using System.Net.Http;
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
-    using Foundation.IAM.Contracts;
     using Newtonsoft.Json;
     using ProcessEngine.ExternalTaskAPI.Contracts;
     using Xunit;
@@ -34,10 +33,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client.Tests
 
         private class TestIdentity : IIdentity
         {
-            public override string ToString()
-            {
-                return "ZHVtbXlfdG9rZW4=";
-            }
+            public string Token { get; } = "ZHVtbXlfdG9rZW4=";
         }
 
         private class TestPayload
