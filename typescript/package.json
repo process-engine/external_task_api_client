@@ -1,6 +1,6 @@
 {
   "name": "@process-engine/external_task_api_client",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "the api-client package for process-engine-consumer",
   "main": "dist/commonjs/index.js",
   "typings": "dist/index.d.ts",
