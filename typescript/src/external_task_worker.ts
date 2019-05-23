@@ -6,50 +6,50 @@ import {
   ExternalTask,
   HandleExternalTaskAction,
   IExternalTaskApi,
-  IExternalTaskResult,
   IExternalTaskWorker,
 } from '@process-engine/external_task_api_contracts';
 
 const logger: Logger = Logger.createLogger('pprocessengine:external_task:worker');
 
 export class ExternalTaskWorker implements IExternalTaskWorker {
-  private readonly _workerId: string = uuid.v4();
-  private readonly _lockDuration: number = 30000;
-  private readonly _externalTaskApi: IExternalTaskApi = undefined;
+
+  // eslint-disable-next-line @typescript-eslint/member-naming
+  private readonly _workerId = uuid.v4();
+  private readonly lockDuration = 30000;
+  private readonly externalTaskApi: IExternalTaskApi = undefined;
 
   constructor(externalTaskApi: IExternalTaskApi) {
-    this._externalTaskApi = externalTaskApi;
+    this.externalTaskApi = externalTaskApi;
   }
 
   public get workerId(): string {
     return this._workerId;
   }
 
-  public async waitForAndHandle<TPayload>(identity: IIdentity,
-                                          topic: string,
-                                          maxTasks: number,
-                                          longpollingTimeout: number,
-                                          handleAction: HandleExternalTaskAction<TPayload>,
-                                         ): Promise<void> {
+  public async waitForAndHandle<TPayload>(
+    identity: IIdentity,
+    topic: string,
+    maxTasks: number,
+    longpollingTimeout: number,
+    handleAction: HandleExternalTaskAction<TPayload>,
+  ): Promise<void> {
 
-    const keepPolling: boolean = true;
+    const keepPolling = true;
     while (keepPolling) {
 
-      const externalTasks: Array<ExternalTask<TPayload>> =
-        await this._fetchAndLockExternalTasks<TPayload>(
-          identity,
-          topic,
-          maxTasks,
-          longpollingTimeout,
-        );
+      const externalTasks = await this.fetchAndLockExternalTasks<TPayload>(
+        identity,
+        topic,
+        maxTasks,
+        longpollingTimeout,
+      );
 
-      // tslint:disable-next-line:no-magic-numbers
-      const interval: NodeJS.Timeout = setInterval(async() => await this._extendLocks(identity, externalTasks), this._lockDuration - 5000);
+      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTasks), this.lockDuration - 5000);
 
       const executeTaskPromises: Array<Promise<void>> = [];
 
       for (const externalTask of externalTasks) {
-        executeTaskPromises.push(this._executeExternalTask(identity, externalTask, handleAction));
+        executeTaskPromises.push(this.executeExternalTask(identity, externalTask, handleAction));
       }
 
       await Promise.all(executeTaskPromises);
@@ -58,54 +58,51 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     }
   }
 
-  private async _fetchAndLockExternalTasks<TPayload>(identity: IIdentity,
-                                                     topic: string,
-                                                     maxTasks: number,
-                                                     longpollingTimeout: number,
-                                                   ): Promise<Array<ExternalTask<TPayload>>> {
+  private async fetchAndLockExternalTasks<TPayload>(
+    identity: IIdentity,
+    topic: string,
+    maxTasks: number,
+    longpollingTimeout: number,
+  ): Promise<Array<ExternalTask<TPayload>>> {
 
     try {
-      return await this._externalTaskApi.fetchAndLockExternalTasks<TPayload>(
-        identity,
-        this._workerId,
-        topic,
-        maxTasks,
-        longpollingTimeout,
-        this._lockDuration,
-      );
+      return await this
+        .externalTaskApi
+        .fetchAndLockExternalTasks<TPayload>(identity, this.workerId, topic, maxTasks, longpollingTimeout, this.lockDuration);
     } catch (error) {
 
       logger.error(error);
-      // tslint:disable-next-line:no-magic-numbers
-      await this._sleep(1000);
+      await this.sleep(1000);
 
-      return await this._fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+      return this.fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
     }
   }
 
-  private async _executeExternalTask<TPayload>(identity: IIdentity,
-                                               externalTask: ExternalTask<TPayload>,
-                                               handleAction: HandleExternalTaskAction<TPayload>,
-                                              ): Promise<void> {
+  private async executeExternalTask<TPayload>(
+    identity: IIdentity,
+    externalTask: ExternalTask<TPayload>,
+    handleAction: HandleExternalTaskAction<TPayload>,
+  ): Promise<void> {
 
     try {
-      const result: IExternalTaskResult = await handleAction(externalTask);
-      await result.sendToExternalTaskApi(this._externalTaskApi, identity, this._workerId);
+      const result = await handleAction(externalTask);
+      await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
     } catch (error) {
       logger.error(error);
-      await this._externalTaskApi.handleServiceError(identity, this._workerId, externalTask.id, error.message, '');
+      await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, error.message, '');
     }
   }
 
-  private async _extendLocks(identity: IIdentity, externalTasks: Array<ExternalTask<any>>): Promise<void> {
+  private async extendLocks<TPayload>(identity: IIdentity, externalTasks: Array<ExternalTask<TPayload>>): Promise<void> {
     for (const externalTask of externalTasks) {
-      await this._externalTaskApi.extendLock(identity, this._workerId, externalTask.id, this._lockDuration);
+      await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
     }
   }
 
-  private async _sleep(milliseconds: number): Promise<void> {
+  private async sleep(milliseconds: number): Promise<void> {
     return new Promise<void>((resolve: Function): void => {
-      setTimeout(() => resolve(), milliseconds);
+      setTimeout((): void => { resolve(); }, milliseconds);
     });
   }
+
 }
