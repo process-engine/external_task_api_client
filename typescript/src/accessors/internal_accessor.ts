@@ -8,63 +8,68 @@ import {
 
 export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
 
-  private readonly _externalApiService: IExternalTaskApi = undefined;
+  private readonly externalApiService: IExternalTaskApi = undefined;
 
   constructor(externalApiService: IExternalTaskApi) {
-    this._externalApiService = externalApiService;
+    this.externalApiService = externalApiService;
   }
 
-  public async fetchAndLockExternalTasks<TPayloadType>(identity: IIdentity,
-                                                       workerId: string,
-                                                       topicName: string,
-                                                       maxTasks: number,
-                                                       longPollingTimeout: number,
-                                                       lockDuration: number,
-                                                      ): Promise<Array<ExternalTask<TPayloadType>>> {
+  public async fetchAndLockExternalTasks<TPayloadType>(
+    identity: IIdentity,
+    workerId: string,
+    topicName: string,
+    maxTasks: number,
+    longPollingTimeout: number,
+    lockDuration: number,
+  ): Promise<Array<ExternalTask<TPayloadType>>> {
 
-    this._ensureIsAuthorized(identity);
+    this.ensureIsAuthorized(identity);
 
     return this
-      ._externalApiService
+      .externalApiService
       .fetchAndLockExternalTasks<TPayloadType>(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);
   }
 
   public async extendLock(identity: IIdentity, workerId: string, externalTaskId: string, additionalDuration: number): Promise<void> {
 
-    this._ensureIsAuthorized(identity);
+    this.ensureIsAuthorized(identity);
 
-    return this._externalApiService.extendLock(identity, workerId, externalTaskId, additionalDuration);
+    return this.externalApiService.extendLock(identity, workerId, externalTaskId, additionalDuration);
   }
 
   public async handleBpmnError(identity: IIdentity, workerId: string, externalTaskId: string, errorCode: string): Promise<void> {
 
-    this._ensureIsAuthorized(identity);
+    this.ensureIsAuthorized(identity);
 
-    return this._externalApiService.handleBpmnError(identity, workerId, externalTaskId, errorCode);
+    return this.externalApiService.handleBpmnError(identity, workerId, externalTaskId, errorCode);
   }
 
-  public async handleServiceError(identity: IIdentity,
-                                  workerId: string,
-                                  externalTaskId: string,
-                                  errorMessage: string,
-                                  errorDetails: string): Promise<void> {
+  public async handleServiceError(
+    identity: IIdentity,
+    workerId: string,
+    externalTaskId: string,
+    errorMessage: string,
+    errorDetails: string,
+  ): Promise<void> {
 
-    this._ensureIsAuthorized(identity);
+    this.ensureIsAuthorized(identity);
 
-    return this._externalApiService.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
+    return this.externalApiService.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
   }
 
-  public async finishExternalTask<TResultType>(identity: IIdentity,
-                                               workerId: string,
-                                               externalTaskId: string,
-                                               payload: TResultType): Promise<void> {
+  public async finishExternalTask<TResultType>(
+    identity: IIdentity,
+    workerId: string,
+    externalTaskId: string,
+    payload: TResultType,
+  ): Promise<void> {
 
-    this._ensureIsAuthorized(identity);
+    this.ensureIsAuthorized(identity);
 
-    return this._externalApiService.finishExternalTask(identity, workerId, externalTaskId, payload);
+    return this.externalApiService.finishExternalTask(identity, workerId, externalTaskId, payload);
   }
 
-  private _ensureIsAuthorized(identity: IIdentity): void {
+  private ensureIsAuthorized(identity: IIdentity): void {
 
     // Note: When using an external accessor, this check is performed by the ConsumerApiHttp module.
     // Since that component is bypassed by the internal accessor, we need to perform this check here.
@@ -73,4 +78,5 @@ export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
       throw new UnauthorizedError('No auth token provided!');
     }
   }
+
 }
