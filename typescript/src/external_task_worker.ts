@@ -77,8 +77,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         'This can happen, if the tasks were already locked by another worker, before this worker could apply its own lock.',
         error);
 
-      // Returning an empty Array here, since "waitForAndHandle" already implements a timeout,
-      // if no results are available for processing.
+      // Returning an empty Array here, since "waitForAndHandle" already implements a timeout, in case no tasks are available for processing.
       // No need to do that twice.
       return [];
     }
