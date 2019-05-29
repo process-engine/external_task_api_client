@@ -76,9 +76,11 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         'An error occured during fetchAndLock!',
         'This can happen, if the tasks were already locked by another worker, before this worker could apply its own lock.',
         error);
-      await this.sleep(1000);
 
-      return this.fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+      // Returning an empty Array here, since "waitForAndHandle" already implements a timeout,
+      // if no results are available for processing.
+      // No need to do that twice.
+      return [];
     }
   }
 
