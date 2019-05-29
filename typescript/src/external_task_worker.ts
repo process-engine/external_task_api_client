@@ -49,8 +49,6 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         continue;
       }
 
-      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTasks), this.lockDuration - 5000);
-
       const executeTaskPromises: Array<Promise<void>> = [];
 
       for (const externalTask of externalTasks) {
@@ -58,8 +56,6 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       }
 
       await Promise.all(executeTaskPromises);
-
-      clearInterval(interval);
     }
   }
 
@@ -90,7 +86,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   ): Promise<void> {
 
     try {
+      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - 5000);
       const result = await handleAction(externalTask);
+      clearInterval(interval);
+
       await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
     } catch (error) {
       logger.error(error);
@@ -98,10 +97,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     }
   }
 
-  private async extendLocks<TPayload>(identity: IIdentity, externalTasks: Array<ExternalTask<TPayload>>): Promise<void> {
-    for (const externalTask of externalTasks) {
-      await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
-    }
+  private async extendLocks<TPayload>(identity: IIdentity, externalTask: ExternalTask<TPayload>): Promise<void> {
+    await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
   }
 
   private async sleep(milliseconds: number): Promise<void> {
