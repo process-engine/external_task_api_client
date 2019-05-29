@@ -45,6 +45,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       );
 
       if (externalTasks.length === 0) {
+        await this.sleep(1000);
         continue;
       }
 
