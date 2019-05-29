@@ -44,6 +44,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         longpollingTimeout,
       );
 
+      if (externalTasks.length === 0) {
+        continue;
+      }
+
       const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTasks), this.lockDuration - 5000);
 
       const executeTaskPromises: Array<Promise<void>> = [];
