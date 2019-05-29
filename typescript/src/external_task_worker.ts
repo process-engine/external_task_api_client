@@ -91,7 +91,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   ): Promise<void> {
 
     try {
-      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - 5000);
+      const lockExtensionBuffer = 5000;
+      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - lockExtensionBuffer);
       const result = await handleAction(externalTask);
       clearInterval(interval);
 
