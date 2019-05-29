@@ -14,8 +14,6 @@ import {
 
 export class ExternalTaskApiExternalAccessor implements IExternalTaskApi {
 
-  public config: any;
-
   private baseUrl = 'api/external_task/v1';
 
   private httpClient: IHttpClient = undefined;

@@ -75,7 +75,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       logger.error(
         'An error occured during fetchAndLock!',
         'This can happen, if the tasks were already locked by another worker, before this worker could apply its own lock.',
-        error);
+        error,
+      );
 
       // Returning an empty Array here, since "waitForAndHandle" already implements a timeout, in case no tasks are available for processing.
       // No need to do that twice.
@@ -91,7 +92,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
     try {
       const lockExtensionBuffer = 5000;
-      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - lockExtensionBuffer);
+
+      const interval =
+        setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - lockExtensionBuffer);
+
       const result = await handleAction(externalTask);
       clearInterval(interval);
 
