@@ -98,7 +98,13 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   }
 
   private async extendLocks<TPayload>(identity: IIdentity, externalTask: ExternalTask<TPayload>): Promise<void> {
-    await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
+    try {
+      await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
+    } catch (error) {
+      // This can happen, if the lock-extension was performed after the task was already finished.
+      // Since this isn't really an error, a warning suffices here.
+      logger.warn(`An error occured while trying to extend the lock for ExternalTask ${externalTask.id}`, error);
+    }
   }
 
   private async sleep(milliseconds: number): Promise<void> {
