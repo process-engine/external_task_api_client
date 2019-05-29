@@ -72,7 +72,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         .fetchAndLockExternalTasks<TPayload>(identity, this.workerId, topic, maxTasks, longpollingTimeout, this.lockDuration);
     } catch (error) {
 
-      logger.error(error);
+      logger.error(
+        'An error occured during fetchAndLock!',
+        'This can happen, if the tasks were already locked by another worker, before this worker could apply its own lock.',
+        error);
       await this.sleep(1000);
 
       return this.fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
@@ -92,7 +95,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
       await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
     } catch (error) {
-      logger.error(error);
+      logger.error('Failed to execute ExternalTask!', error);
       await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, error.message, '');
     }
   }
