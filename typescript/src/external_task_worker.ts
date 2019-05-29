@@ -74,8 +74,8 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
       logger.error(
         'An error occured during fetchAndLock!',
-        'This can happen, if the tasks were already locked by another worker, before this worker could apply its own lock.',
-        error,
+        error.message,
+        error.stack,
       );
 
       // Returning an empty Array here, since "waitForAndHandle" already implements a timeout, in case no tasks are available for processing.
@@ -112,7 +112,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     } catch (error) {
       // This can happen, if the lock-extension was performed after the task was already finished.
       // Since this isn't really an error, a warning suffices here.
-      logger.warn(`An error occured while trying to extend the lock for ExternalTask ${externalTask.id}`, error);
+      logger.warn(`An error occured while trying to extend the lock for ExternalTask ${externalTask.id}`, error.message, error.stack);
     }
   }
 
