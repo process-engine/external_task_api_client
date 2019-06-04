@@ -101,7 +101,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
       await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
     } catch (error) {
-      logger.error('Failed to execute ExternalTask!', error);
+      logger.error('Failed to execute ExternalTask!', error.message, error.stack);
       await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, error.message, '');
     }
   }
