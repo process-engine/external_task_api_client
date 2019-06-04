@@ -44,7 +44,10 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         longpollingTimeout,
       );
 
-      const interval = setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTasks), this.lockDuration - 5000);
+      if (externalTasks.length === 0) {
+        await this.sleep(1000);
+        continue;
+      }
 
       const executeTaskPromises: Array<Promise<void>> = [];
 
@@ -53,8 +56,6 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       }
 
       await Promise.all(executeTaskPromises);
-
-      clearInterval(interval);
     }
   }
 
@@ -71,10 +72,15 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
         .fetchAndLockExternalTasks<TPayload>(identity, this.workerId, topic, maxTasks, longpollingTimeout, this.lockDuration);
     } catch (error) {
 
-      logger.error(error);
-      await this.sleep(1000);
+      logger.error(
+        'An error occured during fetchAndLock!',
+        error.message,
+        error.stack,
+      );
 
-      return this.fetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+      // Returning an empty Array here, since "waitForAndHandle" already implements a timeout, in case no tasks are available for processing.
+      // No need to do that twice.
+      return [];
     }
   }
 
@@ -85,17 +91,28 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   ): Promise<void> {
 
     try {
+      const lockExtensionBuffer = 5000;
+
+      const interval =
+        setInterval(async (): Promise<void> => this.extendLocks<TPayload>(identity, externalTask), this.lockDuration - lockExtensionBuffer);
+
       const result = await handleAction(externalTask);
+      clearInterval(interval);
+
       await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
     } catch (error) {
-      logger.error(error);
+      logger.error('Failed to execute ExternalTask!', error);
       await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, error.message, '');
     }
   }
 
-  private async extendLocks<TPayload>(identity: IIdentity, externalTasks: Array<ExternalTask<TPayload>>): Promise<void> {
-    for (const externalTask of externalTasks) {
+  private async extendLocks<TPayload>(identity: IIdentity, externalTask: ExternalTask<TPayload>): Promise<void> {
+    try {
       await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
+    } catch (error) {
+      // This can happen, if the lock-extension was performed after the task was already finished.
+      // Since this isn't really an error, a warning suffices here.
+      logger.warn(`An error occured while trying to extend the lock for ExternalTask ${externalTask.id}`, error.message, error.stack);
     }
   }
 
