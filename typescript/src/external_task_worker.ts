@@ -9,7 +9,7 @@ import {
   IExternalTaskWorker,
 } from '@process-engine/external_task_api_contracts';
 
-const logger: Logger = Logger.createLogger('pprocessengine:external_task:worker');
+const logger: Logger = Logger.createLogger('processengine:external_task:worker');
 
 export class ExternalTaskWorker implements IExternalTaskWorker {
 
