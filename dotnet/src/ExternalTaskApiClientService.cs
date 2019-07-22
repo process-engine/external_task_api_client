@@ -14,10 +14,7 @@
 
     public class ExternalTaskApiClientService : IExternalTaskAPI
     {
-        private const string BaseRoute = "api/external_task/v1";
-
         private readonly HttpClient httpClient;
-
 
         public ExternalTaskApiClientService(HttpClient httpClient)
         {
@@ -109,28 +106,30 @@
             this.httpClient.Dispose();
         }
 
+        private async Task SendPostToExternalTaskApi<TRequest>(IIdentity identity, string uri, TRequest request)
+        {
+            await this.SendPostRequest(identity, uri, request);
+        }
+
         private async Task<TResponse> SendPostToExternalTaskApi<TRequest, TResponse>(IIdentity identity, string uri, TRequest request)
         {
-            SetAuthenticationHeader(identity);
-
-            var content = GetRequestAsStringContent(request);
-
-            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
-
-            response.EnsureSuccessStatusCode();
+            var response = await this.SendPostRequest(identity, uri, request);
 
             return await DeserializeResposne<TResponse>(response);
         }
 
-        private async Task SendPostToExternalTaskApi<TRequest>(IIdentity identity, string uri, TRequest request)
+        private async Task<HttpResponseMessage> SendPostRequest<TRequest>(IIdentity identity, string uri, TRequest request)
         {
             SetAuthenticationHeader(identity);
 
-            var content = GetRequestAsStringContent(request);
+            var content = this.SerializeRequest(request);
+            var url = this.ApplyBaseUrl(uri);
 
-            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
+            var response = await this.httpClient.PostAsync(url, content);
 
             response.EnsureSuccessStatusCode();
+
+            return response;
         }
 
         private void SetAuthenticationHeader(IIdentity identity)
@@ -138,7 +137,7 @@
             this.httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", identity.Token);
         }
 
-        private StringContent GetRequestAsStringContent<TRequest>(TRequest request)
+        private StringContent SerializeRequest<TRequest>(TRequest request)
         {
             var settings = new JsonSerializerSettings
             {
@@ -157,8 +156,9 @@
             return JsonConvert.DeserializeObject<TResponse>(serializedResponse);
         }
 
-        private string CombineBaseRouteWith(string uri)
+        private string ApplyBaseUrl(string uri)
         {
+            const string BaseRoute = "api/external_task/v1";
             return $"{BaseRoute}/{uri}";
         }
     }
