@@ -64,7 +64,7 @@ pipeline {
       steps {
         dir('dotnet') {
           sh('dotnet --version')
-          sh('dotnet build --configuration Release src/ProcessEngine.ExternalTaskAPI.Client')
+          sh('dotnet build --configuration Release src')
         }
       }
     }
