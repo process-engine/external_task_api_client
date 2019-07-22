@@ -30,11 +30,11 @@ pipeline {
       steps {
         dir('dotnet') {
           sh('dotnet --version')
-          sh('dotnet restore src/ProcessEngine.ExternalTaskAPI.Client')
+          sh('dotnet restore src')
 
           script {
             PACKAGE_VERSION = nuGetTools.getPackageVersionFromCSProjFile(
-              fileName: 'src/ProcessEngine.ExternalTaskAPI.Client/ProcessEngine.ExternalTaskAPI.Client.csproj',
+              fileName: 'src/ProcessEngine.ExternalTaskAPI.Client.csproj',
             );
 
             ALLOW_OVERRIDE_OF_PUBLISHED = false;
@@ -52,7 +52,7 @@ pipeline {
               PACKAGE_VERSION = new_version;
 
               nuGetTools.setPackageVersionInCSProjFile(
-                fileName: 'dotnet/src/ProcessEngine.ExternalTaskAPI.Client/ProcessEngine.ExternalTaskAPI.Client.csproj',
+                fileName: 'dotnet/src/ProcessEngine.ExternalTaskAPI.Client.csproj',
                 newVersion: new_version,
               );
             }
@@ -95,7 +95,7 @@ pipeline {
               }
 
               if (shouldPublish) {
-                sh("dotnet nuget push src/ProcessEngine.ExternalTaskAPI.Client/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
+                sh("dotnet nuget push src/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
               }
             }
           }
