@@ -19,8 +19,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="EssentialProjects.IAM.Contracts" Version="0.1.3" />
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="EssentialProjects.IAM.Contracts" Version="0.1.3" />
         <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="5.2.0" />
     </ItemGroup>
 
