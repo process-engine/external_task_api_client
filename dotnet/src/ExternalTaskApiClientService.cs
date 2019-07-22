@@ -33,8 +33,8 @@
 
         public async Task ExtendLock(IIdentity identity, string workerId, string externalTaskId, int additionalDuration)
         {
-            string uri = $"task/{externalTaskId}/extend_lock";
-            ExtendLockRequest request = new ExtendLockRequest
+            var uri = $"task/{externalTaskId}/extend_lock";
+            var request = new ExtendLockRequest
             (
                 workerId,
                 additionalDuration
@@ -45,8 +45,8 @@
 
         public async Task<IEnumerable<ExternalTask<TPayload>>> FetchAndLockExternalTasks<TPayload>(IIdentity identity, string workerId, string topicName, int maxTasks, int longPollingTimeout, int lockDuration) where TPayload : new()
         {
-            string uri = "fetch_and_lock";
-            FetchAndLockRequest request = new FetchAndLockRequest
+            var uri = "fetch_and_lock";
+            var request = new FetchAndLockRequest
             (
                 workerId,
                 topicName,
@@ -55,7 +55,7 @@
                 lockDuration
             );
 
-            IEnumerable<ExternalTask<TPayload>> response = await this.SendPostToExternalTaskApi<FetchAndLockRequest, IEnumerable<ExternalTask<TPayload>>>
+            var response = await this.SendPostToExternalTaskApi<FetchAndLockRequest, IEnumerable<ExternalTask<TPayload>>>
             (
                 identity,
                 uri,
@@ -66,9 +66,9 @@
 
         public async Task FinishExternalTask<TPayload>(IIdentity identity, string workerId, string externalTaskId, TPayload payload)
         {
-            string uri = $"task/{externalTaskId}/finish";
+            var uri = $"task/{externalTaskId}/finish";
 
-            FinishExternalTaskRequest<TPayload> request = new FinishExternalTaskRequest<TPayload>
+            var request = new FinishExternalTaskRequest<TPayload>
             (
                 workerId,
                 payload
@@ -79,9 +79,9 @@
 
         public async Task HandleBpmnError(IIdentity identity, string workerId, string externalTaskId, string errorCode)
         {
-            string uri = $"task/{externalTaskId}/handle_bpmn_error";
+            var uri = $"task/{externalTaskId}/handle_bpmn_error";
 
-            HandleBpmnErrorRequest request = new HandleBpmnErrorRequest
+            var request = new HandleBpmnErrorRequest
             (
                 workerId,
                 errorCode
@@ -92,9 +92,9 @@
 
         public async Task HandleServiceError(IIdentity identity, string workerId, string externalTaskId, string errorMessage, string errorDetails)
         {
-            string uri = $"task/{externalTaskId}/handle_service_error";
+            var uri = $"task/{externalTaskId}/handle_service_error";
 
-            HandleServiceErrorRequest request = new HandleServiceErrorRequest
+            var request = new HandleServiceErrorRequest
             (
                 workerId,
                 errorMessage,
@@ -113,9 +113,9 @@
         {
             SetAuthenticationHeader(identity);
 
-            StringContent content = GetRequestAsStringContent(request);
+            var content = GetRequestAsStringContent(request);
 
-            HttpResponseMessage response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
+            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
 
             response.EnsureSuccessStatusCode();
 
@@ -126,9 +126,9 @@
         {
             SetAuthenticationHeader(identity);
 
-            StringContent content = GetRequestAsStringContent(request);
+            var content = GetRequestAsStringContent(request);
 
-            HttpResponseMessage response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
+            var response = await this.httpClient.PostAsync(CombineBaseRouteWith(uri), content);
 
             response.EnsureSuccessStatusCode();
         }
@@ -140,19 +140,19 @@
 
         private StringContent GetRequestAsStringContent<TRequest>(TRequest request)
         {
-            JsonSerializerSettings settings = new JsonSerializerSettings
+            var settings = new JsonSerializerSettings
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            string serializedRequest = JsonConvert.SerializeObject(request, settings);
-            StringContent content = new StringContent(serializedRequest, Encoding.UTF8, "application/json");
+            var serializedRequest = JsonConvert.SerializeObject(request, settings);
+            var content = new StringContent(serializedRequest, Encoding.UTF8, "application/json");
             return content;
         }
 
         private async Task<TResponse> DeserializeResposne<TResponse>(HttpResponseMessage response)
         {
-            string serializedResponse = await response.Content.ReadAsStringAsync();
+            var serializedResponse = await response.Content.ReadAsStringAsync();
 
             return JsonConvert.DeserializeObject<TResponse>(serializedResponse);
         }

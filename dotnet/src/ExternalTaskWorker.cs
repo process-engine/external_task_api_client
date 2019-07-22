@@ -12,6 +12,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     /// </summary>
     public class ExternalTaskWorker : IExternalTaskWorker
     {
+        private const string _WorkerId = Guid.NewGuid().ToString();
         private const int LockDurationInMilliseconds = 30000;
         private const int RefreshLockInMilliseconds = LockDurationInMilliseconds - 5000;
 
@@ -26,9 +27,9 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         }
 
         /// <summary>
-        /// Id of worker
+        /// The ID of the worker
         /// </summary>
-        public string WorkerId { get; } = Guid.NewGuid().ToString();
+        public string WorkerId { get; } = this._WorkerId;
 
         /// <summary>
         /// Periodically fetches, locks and processes available ExternalTasks with a given topic,
@@ -58,22 +59,23 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         )
             where TPayload : new()
         {
-            while (true)
+            const bool keepPolling = true;
+            while (keepPolling)
             {
-                IEnumerable<ExternalTask<TPayload>> externalTasks = await this.FetchAndLockExternalTasks<TPayload>(
+                var externalTasks = await this.FetchAndLockExternalTasks<TPayload>(
                     identity,
                     topic,
                     maxTasks,
                     longpollingTimeout
                 );
 
-                Timer timer = this.StartExtendLockTimer(identity, externalTasks, RefreshLockInMilliseconds);
+                var timer = this.StartExtendLockTimer(identity, externalTasks, RefreshLockInMilliseconds);
 
                 try
                 {
-                    IList<Task> tasks = new List<Task>();
+                    var tasks = new List<Task>();
 
-                    foreach (ExternalTask<TPayload> externalTask in externalTasks)
+                    foreach (var externalTask in externalTasks)
                     {
                         tasks.Add(this.ExecuteExternalTask<TPayload>(identity, externalTask, handleAction));
                     }
@@ -89,7 +91,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
 
         private Timer StartExtendLockTimer<TPayload>(IIdentity identity, IEnumerable<ExternalTask<TPayload>> externalTasks, int intervall)
         {
-            Timer timer = new Timer(intervall);
+            var timer = new Timer(intervall);
             timer.Elapsed += async (sender, e) => await ExtendLocks<TPayload>(identity, externalTasks.ToList());
             timer.Start();
 
@@ -135,7 +137,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         {
             try
             {
-                IExternalTaskResult result = await handleAction(externalTask);
+                var result = await handleAction(externalTask);
                 await result.SendToExternalTaskApi(this.externalTaskAPI, identity, WorkerId);
 
             }
@@ -148,7 +150,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
 
         private async Task ExtendLocks<TPayload>(IIdentity identity, IList<ExternalTask<TPayload>> externalTasks)
         {
-            foreach (ExternalTask<TPayload> externalTask in externalTasks)
+            foreach (var externalTask in externalTasks)
             {
                 await this.externalTaskAPI.ExtendLock(identity, this.WorkerId, externalTask.Id, LockDurationInMilliseconds);
             }
