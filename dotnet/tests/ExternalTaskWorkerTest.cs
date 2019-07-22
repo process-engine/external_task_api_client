@@ -5,8 +5,11 @@ namespace ProcessEngine.ExternalTaskAPI.Client.Tests
     using System.Net.Http.Headers;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
-    using ProcessEngine.ExternalTaskAPI.Contracts;
     using Xunit;
+
+    using EssentialProjects.IAM.Contracts;
+
+    using ProcessEngine.ExternalTaskAPI.Contracts;
 
     public class ExternalTaskWorkerTest
     {
@@ -34,6 +37,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client.Tests
         private class TestIdentity : IIdentity
         {
             public string Token { get; } = "ZHVtbXlfdG9rZW4=";
+            public string UserId { get; } = "dummy_token";
         }
 
         private class TestPayload

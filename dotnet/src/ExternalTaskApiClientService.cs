@@ -9,7 +9,9 @@
 
     using Newtonsoft.Json;
     using Newtonsoft.Json.Serialization;
-    using ProcessEngine.ExternalTaskAPI.Client.Requests;
+
+    using EssentialProjects.IAM.Contracts;
+
     using ProcessEngine.ExternalTaskAPI.Contracts;
 
     public class ExternalTaskApiClientService : IExternalTaskAPI
