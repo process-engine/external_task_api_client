@@ -15,7 +15,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ProcessEngine.ExternalTaskAPI.Client\ProcessEngine.ExternalTaskAPI.Client.csproj" />
+        <ProjectReference Include="..\src\ProcessEngine.ExternalTaskAPI.Client.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+        <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="5.2.0" />
     </ItemGroup>
 
 </Project>

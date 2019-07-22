@@ -3,8 +3,8 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
-    using System.Timers;
     using ProcessEngine.ExternalTaskAPI.Contracts;
 
     /// <summary>
@@ -13,7 +13,6 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     public class ExternalTaskWorker : IExternalTaskWorker
     {
         private const int LockDurationInMilliseconds = 30000;
-        private const int RefreshLockInMilliseconds = LockDurationInMilliseconds - 5000;
 
         private readonly IExternalTaskAPI externalTaskAPI;
 
@@ -26,7 +25,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         }
 
         /// <summary>
-        /// Id of worker
+        /// The ID of the worker
         /// </summary>
         public string WorkerId { get; } = Guid.NewGuid().ToString();
 
@@ -58,42 +57,31 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         )
             where TPayload : new()
         {
-            while (true)
+            const bool keepPolling = true;
+            while (keepPolling)
             {
-                IEnumerable<ExternalTask<TPayload>> externalTasks = await this.FetchAndLockExternalTasks<TPayload>(
+                var externalTasks = await this.FetchAndLockExternalTasks<TPayload>(
                     identity,
                     topic,
                     maxTasks,
                     longpollingTimeout
                 );
 
-                Timer timer = this.StartExtendLockTimer(identity, externalTasks, RefreshLockInMilliseconds);
-
-                try
+                if (externalTasks.Count() == 0)
                 {
-                    IList<Task> tasks = new List<Task>();
-
-                    foreach (ExternalTask<TPayload> externalTask in externalTasks)
-                    {
-                        tasks.Add(this.ExecuteExternalTask<TPayload>(identity, externalTask, handleAction));
-                    }
-
-                    await Task.WhenAll(tasks);
+                    Thread.Sleep(1000);
+                    continue;
                 }
-                finally
+
+                var tasks = new List<Task>();
+
+                foreach (var externalTask in externalTasks)
                 {
-                    timer.Stop();
+                    tasks.Add(this.ExecuteExternalTask<TPayload>(identity, externalTask, handleAction));
                 }
+
+                await Task.WhenAll(tasks);
             }
-        }
-
-        private Timer StartExtendLockTimer<TPayload>(IIdentity identity, IEnumerable<ExternalTask<TPayload>> externalTasks, int intervall)
-        {
-            Timer timer = new Timer(intervall);
-            timer.Elapsed += async (sender, e) => await ExtendLocks<TPayload>(identity, externalTasks.ToList());
-            timer.Start();
-
-            return timer;
         }
 
         private async Task<IEnumerable<ExternalTask<TPayload>>> FetchAndLockExternalTasks<TPayload>(
@@ -119,10 +107,9 @@ namespace ProcessEngine.ExternalTaskAPI.Client
             {
                 Console.WriteLine(exception);
 
-                int millisecondsBeforeNextTry = 1000;
-                await Task.Delay(millisecondsBeforeNextTry);
-
-                return await this.FetchAndLockExternalTasks<TPayload>(identity, topic, maxTasks, longpollingTimeout);
+                // Returning an empty Array here, since "waitForAndHandle" already implements a timeout, in case no tasks are available for processing.
+                // No need to do that twice.
+                return new List<ExternalTask<TPayload>>();
             }
         }
 
@@ -133,24 +120,46 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         )
           where TPayload : new()
         {
+            const int lockExtensionBuffer = 5000;
+            const int lockRefreshIntervalInMs = LockDurationInMilliseconds - lockExtensionBuffer;
+
+            var lockRefreshTimer = this.StartExtendLockTimer(identity, externalTask, lockRefreshIntervalInMs);
+
             try
             {
-                IExternalTaskResult result = await handleAction(externalTask);
-                await result.SendToExternalTaskApi(this.externalTaskAPI, identity, WorkerId);
+                var result = await handleAction(externalTask);
 
+                lockRefreshTimer.Stop();
+                await result.SendToExternalTaskApi(this.externalTaskAPI, identity, WorkerId);
             }
             catch (Exception exception)
             {
                 Console.WriteLine(exception);
+                lockRefreshTimer.Stop();
                 await this.externalTaskAPI.HandleServiceError(identity, this.WorkerId, externalTask.Id, exception.Message, exception.StackTrace);
             }
         }
 
-        private async Task ExtendLocks<TPayload>(IIdentity identity, IList<ExternalTask<TPayload>> externalTasks)
+        private System.Timers.Timer StartExtendLockTimer<TPayload>(IIdentity identity, ExternalTask<TPayload> externalTask, int intervall)
         {
-            foreach (ExternalTask<TPayload> externalTask in externalTasks)
+            var timer = new System.Timers.Timer(intervall);
+            timer.Elapsed += async (sender, e) => await ExtendLock<TPayload>(identity, externalTask);
+            timer.Start();
+
+            return timer;
+        }
+
+        private async Task ExtendLock<TPayload>(IIdentity identity, ExternalTask<TPayload> externalTask)
+        {
+            try
             {
                 await this.externalTaskAPI.ExtendLock(identity, this.WorkerId, externalTask.Id, LockDurationInMilliseconds);
+            }
+            catch (Exception error)
+            {
+                // This can happen, if the lock-extension was performed after the task was already finished.
+                // Since this isn't really an error, a warning suffices here.
+                Console.WriteLine($"An error occured while trying to extend the lock for ExternalTask ${externalTask.Id}", error.Message, error.StackTrace);
             }
         }
     }
