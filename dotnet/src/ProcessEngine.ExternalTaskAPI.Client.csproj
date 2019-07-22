@@ -6,7 +6,7 @@
         <RootNamespace>ProcessEngine.ExternalTaskAPI.Client</RootNamespace>
         <AssemblyName>ProcessEngine.ExternalTaskAPI.Client</AssemblyName>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-        <Authors>Robin Lenz</Authors>
+        <Authors>Christian Werner;Robin Lenz</Authors>
         <Company>5Minds IT-Solutions GmbH &amp; Co. KG</Company>
         <Description />
         <Copyright>Copyright © 5Minds IT-Solutions GmbH &amp; Co. KG 2018</Copyright>
