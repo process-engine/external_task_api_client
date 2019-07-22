@@ -5,6 +5,9 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using EssentialProjects.IAM.Contracts;
+
     using ProcessEngine.ExternalTaskAPI.Contracts;
 
     /// <summary>
