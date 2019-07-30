@@ -1,6 +1,6 @@
 #!/usr/bin/env groovy
 
-@Library('jenkins_shared-libraries@v1.1.0') _
+@Library('jenkins_shared-libraries@v1.2.0') _
 
 def cleanup_workspace() {
   cleanWs()
@@ -30,7 +30,33 @@ pipeline {
       steps {
         dir('dotnet') {
           sh('dotnet --version')
-          sh('dotnet restore src/ProcessEngine.ExternalTaskAPI.Client')
+          sh('dotnet restore src')
+
+          script {
+            PACKAGE_VERSION = nuGetTools.getPackageVersionFromCSProjFile(
+              fileName: 'src/ProcessEngine.ExternalTaskAPI.Client.csproj',
+            );
+
+            ALLOW_OVERRIDE_OF_PUBLISHED = false;
+
+            if (BRANCH_NAME != 'master') {
+
+              ALLOW_OVERRIDE_OF_PUBLISHED = true;
+
+              def escaped_branch_name = BRANCH_NAME
+                .replace('/', '-')
+                .replace('_', '-');
+
+              def new_version = "${PACKAGE_VERSION}-${escaped_branch_name}";
+
+              PACKAGE_VERSION = new_version;
+
+              nuGetTools.setPackageVersionInCSProjFile(
+                fileName: 'dotnet/src/ProcessEngine.ExternalTaskAPI.Client.csproj',
+                newVersion: new_version,
+              );
+            }
+          }
         }
       }
     }
@@ -38,37 +64,38 @@ pipeline {
       steps {
         dir('dotnet') {
           sh('dotnet --version')
-          sh('dotnet build --configuration Release src/ProcessEngine.ExternalTaskAPI.Client')
+          sh('dotnet build --configuration Release src')
         }
       }
     }
     stage('publish') {
-      when {
-        branch 'master'
-      }
       steps {
         dir('dotnet') {
+
           sh('dotnet --version')
           withCredentials([string(credentialsId: 'myget_process_engine_public_feed_token', variable: 'PROCESS_ENGINE_PUBLIC')]) {
             script {
 
-              def packageVersion = nuGetTools.getPackageVersionFromCSProjFile(
-                fileName: 'src/ProcessEngine.ExternalTaskAPI.Client/ProcessEngine.ExternalTaskAPI.Client.csproj'
-              );
-
-              echo "Package version is ${packageVersion}.";
+              echo "Package version is ${PACKAGE_VERSION}.";
 
               def packageWasAlreadyPublished = nuGetTools.isNuGetPackagePublished(
                 nuGetFeedURL: "https://5minds.myget.org/F/process_engine_public/api/v3/index.json",
                 package: "ProcessEngine.ExternalTaskAPI.Client",
-                version: packageVersion,
+                version: PACKAGE_VERSION,
                 nuGetToken: PROCESS_ENGINE_PUBLIC,
               );
 
+              def shouldPublish = ALLOW_OVERRIDE_OF_PUBLISHED || !packageWasAlreadyPublished;
               if (packageWasAlreadyPublished) {
-                echo "Package version was already published, skipping publish.";
-              } else {
-                sh("dotnet nuget push src/ProcessEngine.ExternalTaskAPI.Client/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
+                if (ALLOW_OVERRIDE_OF_PUBLISHED) {
+                  echo "Package version was already published, overriding version."
+                } else {
+                  echo "Package version was already published, skipping publish.";
+                }
+              }
+
+              if (shouldPublish) {
+                sh("dotnet nuget push src/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $PROCESS_ENGINE_PUBLIC --source https://5minds.myget.org/F/process_engine_public/api/v2");
               }
             }
           }
