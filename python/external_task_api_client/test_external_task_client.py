@@ -4,9 +4,9 @@ import asyncio
 import unittest
 import json
 
-from external_task_api_client_service import ExternalTaskApiClientService
-from ExternalTaskResults.finished import ExternalTaskFinished
-from external_task_worker import ExternalTaskWorker
+from external_task_api_client.external_task_api_client_service import ExternalTaskApiClientService
+from external_task_api_client.external_task_worker import ExternalTaskWorker
+from external_task_api_client.external_task_results.finished import ExternalTaskFinished
 
 
 class TestHandleExternalTask(unittest.TestCase):
@@ -26,7 +26,8 @@ class TestHandleExternalTask(unittest.TestCase):
 
         print('Using ProcessEngine at "{}"'.format(process_engine_location))
 
-        external_task_client = ExternalTaskApiClientService(process_engine_location)
+        external_task_client = ExternalTaskApiClientService(
+            process_engine_location)
 
         worker = ExternalTaskWorker(external_task_client)
 
