@@ -12,7 +12,6 @@ class ExternalTaskWorker:
         self.__extend_lock_timer = None
         self.worker_id = str(uuid.uuid4())
 
-
     async def wait_for_handle(self, identity, topic, max_tasks, long_polling_timeout, handle_action):
         """
         Wait for an External Task to appear for the given topic;
@@ -30,10 +29,10 @@ class ExternalTaskWorker:
         """
         while True:
             external_tasks = await self.__fetch_and_lock_external_tasks(
-                    identity,
-                    topic,
-                    max_tasks,
-                    long_polling_timeout
+                identity,
+                topic,
+                max_tasks,
+                long_polling_timeout
             )
 
             self.__start_extend_lock_timer(
@@ -47,9 +46,9 @@ class ExternalTaskWorker:
 
                 for external_task in external_tasks:
                     task = self.__execute_external_task(
-                            identity,
-                            external_task,
-                            handle_action
+                        identity,
+                        external_task,
+                        handle_action
                     )
 
                     tasks.append(task)
@@ -59,7 +58,6 @@ class ExternalTaskWorker:
 
             finally:
                 self.__extend_lock_timer.cancel()
-
 
     async def __fetch_and_lock_external_tasks(self, identity, topic_name, max_tasks, long_polling_timeout):
         """
@@ -75,7 +73,7 @@ class ExternalTaskWorker:
                 self.__lock_duration)
 
         except Exception as exception:
-            print('There was an exception as we tried to fetch an lock: "{}"'.format(exception))
+            print(f'There was an exception as we tried to fetch an lock: "{exception}"')
 
             await asyncio.sleep(1)
 
@@ -85,7 +83,6 @@ class ExternalTaskWorker:
                 topic_name,
                 max_tasks,
                 long_polling_timeout)
-
 
     def __extend_locks(self, identity, external_tasks):
         """ Uses the External Task API to extend a lock; use this if you need more time to handle the work. """
@@ -99,7 +96,6 @@ class ExternalTaskWorker:
                 )
             )
 
-
     def __start_extend_lock_timer(self, identity, external_tasks, interval):
         """
         """
@@ -111,7 +107,6 @@ class ExternalTaskWorker:
         self.__extend_lock_timer.start()
 
         return
-
 
     async def __execute_external_task(self, identity, external_task, handle_action):
         """ Call the handle_action callback we should use for this External Task. """
@@ -126,13 +121,13 @@ class ExternalTaskWorker:
             )
 
         except Exception as exception:
-            print('The External Task handle Action caused an Exception: "{}"'.format(exception))
+            print(f'The External Task handle Action caused an Exception: "{exception}"')
             print('We will answer with a service error to the ProcessEngine.')
 
             await self.__external_task_api .handle_service_error(
                 identity,
                 self.worker_id,
                 external_task["id"],
-                exception,
+                str(exception),
                 ""
             )
