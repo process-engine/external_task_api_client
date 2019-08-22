@@ -73,8 +73,7 @@ class ExternalTaskWorker:
                 self.__lock_duration)
 
         except Exception as exception:
-            print(
-                'There was an exception as we tried to fetch an lock: "{}"'.format(exception))
+            print(f'There was an exception as we tried to fetch an lock: "{exception}"')
 
             await asyncio.sleep(1)
 
@@ -122,8 +121,7 @@ class ExternalTaskWorker:
             )
 
         except Exception as exception:
-            print(
-                'The External Task handle Action caused an Exception: "{}"'.format(exception))
+            print(f'The External Task handle Action caused an Exception: "{exception}"')
             print('We will answer with a service error to the ProcessEngine.')
 
             await self.__external_task_api .handle_service_error(
