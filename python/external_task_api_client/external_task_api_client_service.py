@@ -73,11 +73,9 @@ class ExternalTaskApiClientService:
                 if response.status == 200:
                     return await response.json()
 
-
     def __get_authorization_header(self, token):
         """Builds the HTTP header line for authorization; uses the BEARER token format"""
         return {'Authorization': 'Bearer {}'.format(token)}
-
 
     def __combine_with_base_url(self, uri):
         return self.__combined_url.format(self.__base_url, uri)
