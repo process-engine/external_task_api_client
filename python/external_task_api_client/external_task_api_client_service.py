@@ -21,7 +21,10 @@ class ExternalTaskApiClientService:
             "additionalDuration": additional_duration
         }
 
-        return await self.__send_post_to_external_task_api(identity, uri, request)
+        try:
+            await self.__send_post_to_external_task_api(identity, uri, request)
+        except:
+            return
 
     async def fetch_and_lock_external_tasks(self, identity, worker_id, topic_name, max_tasks, long_polling_timeout, lock_duration):
         uri = self.__fetch_and_lock_uri
