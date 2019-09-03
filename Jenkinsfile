@@ -33,8 +33,6 @@ pipeline {
 
             // does prepare the version, but not commit it
             sh('node ./node_modules/.bin/ci_tools prepare-version --allow-dirty-workdir')
-
-            // stash the package.json because it contains the prepared version number
           }
         }
       }
@@ -53,7 +51,6 @@ pipeline {
           sh('node --version')
           sh('npm run build')
         }
-
       }
     }
     stage('Test') {
@@ -86,7 +83,6 @@ pipeline {
     stage('Publish') {
       steps {
         dir('typescript') {
-
           nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
             sh('node ./node_modules/.bin/ci_tools publish-npm-package --create-tag-from-branch-name')
           }
