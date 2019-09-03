@@ -21,6 +21,7 @@
     "@essential-projects/errors_ts": "^1.4.0",
     "@essential-projects/http_contracts": "^2.3.0",
     "@essential-projects/iam_contracts": "^3.4.0",
+    "@process-engine/ci_tools": "2.0.0-beta5",
     "@process-engine/external_task_api_contracts": "^1.0.0",
     "async-middleware": "^1.2.1",
     "loggerhythm": "^3.0.3",

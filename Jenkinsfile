@@ -24,22 +24,20 @@ pipeline {
   }
 
   stages {
-    stage('prepare') {
+    stage('Prepare') {
       steps {
         dir('typescript') {
-          script {
-            raw_package_version = sh(script: 'node --print --eval "require(\'./package.json\').version"', returnStdout: true).trim();
-            package_version = raw_package_version.trim()
-            echo("Package version is '${package_version}'")
-          }
           nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
             sh('node --version')
             sh('npm install --ignore-scripts')
+
+            // does prepare the version, but not commit it
+            sh('node ./node_modules/.bin/ci_tools prepare-version --allow-dirty-workdir')
           }
         }
       }
     }
-    stage('lint') {
+    stage('Lint') {
       steps {
         dir('typescript') {
           sh('node --version')
@@ -47,7 +45,7 @@ pipeline {
         }
       }
     }
-    stage('build') {
+    stage('Build') {
       steps {
         dir('typescript') {
           sh('node --version')
@@ -55,7 +53,7 @@ pipeline {
         }
       }
     }
-    stage('test') {
+    stage('Test') {
       steps {
         dir('typescript') {
           sh('node --version')
@@ -63,58 +61,35 @@ pipeline {
         }
       }
     }
-    stage('publish') {
+    stage('Commit & tag version') {
+      when {
+        anyOf {
+          branch "master"
+          branch "beta"
+          branch "develop"
+        }
+      }
+      steps {
+        withCredentials([
+          usernamePassword(credentialsId: 'process-engine-ci_github-token', passwordVariable: 'GH_TOKEN', usernameVariable: 'GH_USER')
+        ]) {
+          // does not change the version, but commit and tag it
+          sh('node ./node_modules/.bin/ci_tools commit-and-tag-version --only-on-primary-branches')
+
+          sh('node ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag');
+        }
+      }
+    }
+    stage('Publish') {
       steps {
         dir('typescript') {
-          script {
-            def branch = env.BRANCH_NAME;
-            def branch_is_master = branch == 'master';
-            def new_commit = env.GIT_PREVIOUS_COMMIT != env.GIT_COMMIT;
-
-            if (branch_is_master) {
-              if (new_commit) {
-                script {
-                  // let the build fail if the version does not match normal semver
-                  def semver_matcher = package_version =~ /\d+\.\d+\.\d+/;
-                  def is_version_not_semver = semver_matcher.matches() == false;
-                  if (is_version_not_semver) {
-                    error('Only non RC Versions are allowed in master')
-                  }
-                }
-
-                def raw_package_name = sh(script: 'node --print --eval "require(\'./package.json\').name"', returnStdout: true).trim();
-                def current_published_version = sh(script: "npm show ${raw_package_name} version", returnStdout: true).trim();
-                def version_has_changed = current_published_version != raw_package_version;
-
-                if (version_has_changed) {
-                  nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
-                    sh('node --version')
-                    sh('npm publish --ignore-scripts')
-                  }
-                } else {
-                  println 'Skipping publish for this version. Version unchanged.'
-                }
-              }
-
-            } else {
-              // when not on master, publish a prerelease based on the package version, the
-              // current git commit and the build number.
-              // the published version gets tagged as the branch name.
-              def first_seven_digits_of_git_hash = env.GIT_COMMIT.substring(0, 8);
-              def publish_version = "${package_version}-${first_seven_digits_of_git_hash}-b${env.BUILD_NUMBER}";
-              def publish_tag = branch.replace("/", "~");
-
-              nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
-                sh('node --version')
-                sh("npm version ${publish_version} --no-git-tag-version --force")
-                sh("npm publish --tag ${publish_tag} --ignore-scripts")
-              }
-            }
+          nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
+            sh('node ./node_modules/.bin/ci_tools publish-npm-package --create-tag-from-branch-name')
           }
         }
       }
     }
-    stage('cleanup') {
+    stage('Cleanup') {
       steps {
         script {
           // this stage just exists, so the cleanup-work that happens in the post-script
