@@ -70,13 +70,15 @@ pipeline {
         }
       }
       steps {
-        withCredentials([
-          usernamePassword(credentialsId: 'process-engine-ci_github-token', passwordVariable: 'GH_TOKEN', usernameVariable: 'GH_USER')
-        ]) {
-          // does not change the version, but commit and tag it
-          sh('node ./node_modules/.bin/ci_tools commit-and-tag-version --only-on-primary-branches')
+        dir('typescript') {
+          withCredentials([
+            usernamePassword(credentialsId: 'process-engine-ci_github-token', passwordVariable: 'GH_TOKEN', usernameVariable: 'GH_USER')
+          ]) {
+            // does not change the version, but commit and tag it
+            sh('node ./node_modules/.bin/ci_tools commit-and-tag-version --only-on-primary-branches')
 
-          sh('node ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag');
+            sh('node ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag');
+          }
         }
       }
     }
