@@ -3,11 +3,11 @@ import * as uuid from 'uuid';
 
 import {IIdentity} from '@essential-projects/iam_contracts';
 import {
-  ExternalTask,
+  APIs,
+  DataModels,
   HandleExternalTaskAction,
-  IExternalTaskApi,
   IExternalTaskWorker,
-} from '@process-engine/external_task_api_contracts';
+} from '@process-engine/consumer_api_contracts';
 
 const logger: Logger = Logger.createLogger('processengine:external_task:worker');
 
@@ -16,9 +16,9 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
   // eslint-disable-next-line @typescript-eslint/member-naming
   private readonly _workerId = uuid.v4();
   private readonly lockDuration = 30000;
-  private readonly externalTaskApi: IExternalTaskApi = undefined;
+  private readonly externalTaskApi: APIs.IExternalTaskConsumerApi = undefined;
 
-  constructor(externalTaskApi: IExternalTaskApi) {
+  constructor(externalTaskApi: APIs.IExternalTaskConsumerApi) {
     this.externalTaskApi = externalTaskApi;
   }
 
@@ -64,7 +64,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
     topic: string,
     maxTasks: number,
     longpollingTimeout: number,
-  ): Promise<Array<ExternalTask<TPayload>>> {
+  ): Promise<Array<DataModels.ExternalTask.ExternalTask<TPayload>>> {
 
     try {
       return await this
@@ -86,7 +86,7 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
 
   private async executeExternalTask<TPayload>(
     identity: IIdentity,
-    externalTask: ExternalTask<TPayload>,
+    externalTask: DataModels.ExternalTask.ExternalTask<TPayload>,
     handleAction: HandleExternalTaskAction<TPayload>,
   ): Promise<void> {
 
@@ -99,14 +99,25 @@ export class ExternalTaskWorker implements IExternalTaskWorker {
       const result = await handleAction(externalTask);
       clearInterval(interval);
 
-      await result.sendToExternalTaskApi(this.externalTaskApi, identity, this.workerId);
+      if (result instanceof DataModels.ExternalTask.ExternalTaskBpmnError) {
+        await this.externalTaskApi.handleBpmnError(identity, this.workerId, externalTask.id, result.errorCode);
+      } else if (result instanceof DataModels.ExternalTask.ExternalTaskServiceError) {
+        await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, result.errorMessage, result.errorDetails);
+      } else {
+        const resultAsSuccess = result as DataModels.ExternalTask.ExternalTaskSuccessResult<TPayload>;
+
+        await this
+          .externalTaskApi
+          .finishExternalTask(identity, this.workerId, externalTask.id, resultAsSuccess.result);
+      }
+
     } catch (error) {
       logger.error('Failed to execute ExternalTask!', error.message, error.stack);
       await this.externalTaskApi.handleServiceError(identity, this.workerId, externalTask.id, error.message, '');
     }
   }
 
-  private async extendLocks<TPayload>(identity: IIdentity, externalTask: ExternalTask<TPayload>): Promise<void> {
+  private async extendLocks<TPayload>(identity: IIdentity, externalTask: DataModels.ExternalTask.ExternalTask<TPayload>): Promise<void> {
     try {
       await this.externalTaskApi.extendLock(identity, this.workerId, externalTask.id, this.lockDuration);
     } catch (error) {

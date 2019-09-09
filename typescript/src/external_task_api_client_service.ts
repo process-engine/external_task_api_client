@@ -1,16 +1,15 @@
 import {IIdentity} from '@essential-projects/iam_contracts';
 
 import {
-  ExternalTask,
-  IExternalTaskApi,
-  IExternalTaskApiAccessor,
-} from '@process-engine/external_task_api_contracts';
+  APIs,
+  DataModels,
+} from '@process-engine/consumer_api_contracts';
 
-export class ExternalTaskApiClientService implements IExternalTaskApi {
+export class ExternalTaskApiClientService implements APIs.IExternalTaskConsumerApi {
 
-  private readonly externalApiAccessor: IExternalTaskApiAccessor = undefined;
+  private readonly externalApiAccessor: APIs.IExternalTaskConsumerApi = undefined;
 
-  constructor(externalApiAccessor: IExternalTaskApiAccessor) {
+  constructor(externalApiAccessor: APIs.IExternalTaskConsumerApi) {
     this.externalApiAccessor = externalApiAccessor;
   }
 
@@ -21,7 +20,7 @@ export class ExternalTaskApiClientService implements IExternalTaskApi {
     maxTasks: number,
     longPollingTimeout: number,
     lockDuration: number,
-  ): Promise<Array<ExternalTask<TPayloadType>>> {
+  ): Promise<Array<DataModels.ExternalTask.ExternalTask<TPayloadType>>> {
     return this
       .externalApiAccessor
       .fetchAndLockExternalTasks<TPayloadType>(identity, workerId, topicName, maxTasks, longPollingTimeout, lockDuration);

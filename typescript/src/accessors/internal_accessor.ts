@@ -2,15 +2,15 @@ import {UnauthorizedError} from '@essential-projects/errors_ts';
 import {IIdentity} from '@essential-projects/iam_contracts';
 
 import {
-  ExternalTask,
-  IExternalTaskApi,
-} from '@process-engine/external_task_api_contracts';
+  APIs,
+  DataModels,
+} from '@process-engine/consumer_api_contracts';
 
-export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
+export class ExternalTaskApiInternalAccessor implements APIs.IExternalTaskConsumerApi {
 
-  private readonly externalApiService: IExternalTaskApi = undefined;
+  private readonly externalApiService: APIs.IExternalTaskConsumerApi = undefined;
 
-  constructor(externalApiService: IExternalTaskApi) {
+  constructor(externalApiService: APIs.IExternalTaskConsumerApi) {
     this.externalApiService = externalApiService;
   }
 
@@ -21,7 +21,7 @@ export class ExternalTaskApiInternalAccessor implements IExternalTaskApi {
     maxTasks: number,
     longPollingTimeout: number,
     lockDuration: number,
-  ): Promise<Array<ExternalTask<TPayloadType>>> {
+  ): Promise<Array<DataModels.ExternalTask.ExternalTask<TPayloadType>>> {
 
     this.ensureIsAuthorized(identity);
 
