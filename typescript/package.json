@@ -21,7 +21,6 @@
     "@essential-projects/errors_ts": "^1.4.0",
     "@essential-projects/http_contracts": "^2.3.0",
     "@essential-projects/iam_contracts": "^3.4.0",
-    "@process-engine/ci_tools": "2.0.0-alpha.51",
     "@process-engine/consumer_api_contracts": "8.1.0-eb122423-b28",
     "async-middleware": "^1.2.1",
     "loggerhythm": "^3.0.3",
@@ -29,6 +28,7 @@
   },
   "devDependencies": {
     "@essential-projects/eslint-config": "^1.0.0",
+    "@process-engine/ci_tools": "^2.0.0",
     "@types/express": "^4.16.0",
     "@types/node": "^10.12.2",
     "eslint": "^5.16.0",
