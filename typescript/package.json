@@ -21,7 +21,7 @@
     "@essential-projects/errors_ts": "^1.4.0",
     "@essential-projects/http_contracts": "^2.3.0",
     "@essential-projects/iam_contracts": "^3.4.0",
-    "@process-engine/consumer_api_contracts": "8.1.0-eb122423-b28",
+    "@process-engine/consumer_api_contracts": "8.1.0-35fc9279-b29",
     "async-middleware": "^1.2.1",
     "loggerhythm": "^3.0.3",
     "uuid": "^3.3.2"
