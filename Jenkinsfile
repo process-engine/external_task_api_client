@@ -24,28 +24,17 @@ pipeline {
   }
 
   stages {
-    stage('Prepare') {
+    stage('Install dependencies') {
       steps {
         dir('typescript') {
           nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
             sh('node --version')
             sh('npm install --ignore-scripts')
-
-            // does prepare the version, but not commit it
-            sh('node ./node_modules/.bin/ci_tools prepare-version --allow-dirty-workdir')
           }
         }
       }
     }
-    stage('Lint') {
-      steps {
-        dir('typescript') {
-          sh('node --version')
-        sh('npm run lint')
-        }
-      }
-    }
-    stage('Build') {
+    stage('Build Sources') {
       steps {
         dir('typescript') {
           sh('node --version')
@@ -54,39 +43,66 @@ pipeline {
       }
     }
     stage('Test') {
-      steps {
-        dir('typescript') {
-          sh('node --version')
-          sh('npm run test')
+      parallel {
+        stage('Lint sources') {
+          steps {
+            dir('typescript') {
+              sh('node --version')
+              sh('npm run lint')
+            }
+          }
+        }
+        stage('Execute tests') {
+          steps {
+            dir('typescript') {
+              sh('node --version')
+              sh('npm run test')
+            }
+          }
         }
       }
     }
-    stage('Commit & tag version') {
-      when {
-        anyOf {
-          branch "master"
-          branch "beta"
-          branch "develop"
-        }
-      }
+    stage('Set package version') {
       steps {
         dir('typescript') {
+          sh('node --version')
+          sh('node ./node_modules/.bin/ci_tools prepare-version --allow-dirty-workdir');
+
           withCredentials([
             usernamePassword(credentialsId: 'process-engine-ci_github-token', passwordVariable: 'GH_TOKEN', usernameVariable: 'GH_USER')
           ]) {
-            // does not change the version, but commit and tag it
             sh('node ./node_modules/.bin/ci_tools commit-and-tag-version --only-on-primary-branches')
-
-            sh('node ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag');
           }
         }
       }
     }
     stage('Publish') {
-      steps {
-        dir('typescript') {
-          nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
-            sh('node ./node_modules/.bin/ci_tools publish-npm-package --create-tag-from-branch-name')
+      parallel {
+        stage('npm') {
+          steps {
+            dir('typescript') {
+              nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
+                sh('node ./node_modules/.bin/ci_tools publish-npm-package --create-tag-from-branch-name')
+              }
+            }
+          }
+        }
+        stage('GitHub') {
+          when {
+            anyOf {
+              branch "beta"
+              branch "develop"
+              branch "master"
+            }
+          }
+          steps {
+            dir('typescript') {
+              withCredentials([
+                usernamePassword(credentialsId: 'process-engine-ci_github-token', passwordVariable: 'GH_TOKEN', usernameVariable: 'GH_USER')
+              ]) {
+                sh('node ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag');
+              }
+            }
           }
         }
       }
