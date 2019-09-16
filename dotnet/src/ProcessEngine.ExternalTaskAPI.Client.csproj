@@ -20,7 +20,7 @@
     <ItemGroup>
         <PackageReference Include="EssentialProjects.IAM.Contracts" Version="0.1.3" />
         <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-        <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="6.0.0" />
+        <PackageReference Include="ProcessEngine.ConsumerAPI.Contracts" Version="14.1.0-feature-make-external-task-worker-immutable" />
     </ItemGroup>
 
 </Project>
