@@ -15,7 +15,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     /// <summary>
     /// Periodically fetches, locks and processes ExternalTasks for a given topic.
     /// </summary>
-    public class ExternalTaskWorker<TExternalTaskPayload> : IExternalTaskWorker<TExternalTaskPayload>
+    public class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> : IExternalTaskWorker
             where TExternalTaskPayload : new()
     {
         private const int LockDuration = 30000;
@@ -24,7 +24,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         private readonly string Topic;
         private readonly int MaxTasks;
         private readonly int LongpollingTimeout;
-        private readonly HandleExternalTaskAction<TExternalTaskPayload> ProcessingFunction;
+        private readonly HandleExternalTaskAction<TExternalTaskPayload, TResultPayload> ProcessingFunction;
 
         private ExternalTaskApiClientService ExternalTaskClient;
 
@@ -37,7 +37,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
             string topic,
             int maxTasks,
             int longpollingTimeout,
-            HandleExternalTaskAction<TExternalTaskPayload> processingFunction
+            HandleExternalTaskAction<TExternalTaskPayload, TResultPayload> processingFunction
         )
         {
             this.ProcessEngineUrl = processEngineUrl;
@@ -47,7 +47,7 @@ namespace ProcessEngine.ExternalTaskAPI.Client
             this.LongpollingTimeout = longpollingTimeout;
             this.ProcessingFunction = processingFunction;
 
-            this.initialize();
+            this.Initialize();
         }
 
         /// <summary>
@@ -60,16 +60,16 @@ namespace ProcessEngine.ExternalTaskAPI.Client
         /// </summary>
         public string WorkerId { get; } = Guid.NewGuid().ToString();
 
-        public void start() {
+        public void Start() {
             this.PollingActive = true;
             this.ProcessExternalTasks();
         }
 
-        public void stop() {
+        public void Stop() {
             this.PollingActive = false;
         }
 
-        private void initialize() {
+        private void Initialize() {
           var httpClient = new HttpClient();
           httpClient.BaseAddress = new Uri(ProcessEngineUrl);
 

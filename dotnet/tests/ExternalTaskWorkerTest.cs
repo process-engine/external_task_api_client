@@ -1,37 +1,50 @@
 namespace ProcessEngine.ExternalTaskAPI.Client.Tests
 {
-    using System;
     using System.Net.Http;
-    using System.Net.Http.Headers;
     using System.Threading.Tasks;
-    using Newtonsoft.Json;
     using Xunit;
 
     using EssentialProjects.IAM.Contracts;
-
-    using ProcessEngine.ExternalTaskAPI.Contracts;
+    using ProcessEngine.ConsumerAPI.Contracts.DataModel;
 
     public class ExternalTaskWorkerTest
     {
+        private ExternalTaskWorker<TestPayload, SampleResult> testObject;
         [Fact]
         public async void HandleExternalTask()
         {
-            IIdentity identity = new TestIdentity();
-            HttpClient client = new HttpClient();
-            client.BaseAddress = new Uri("http://localhost:8000");
+            var identity = new TestIdentity();
+            var client = new HttpClient();
+            var url = "http://localhost:8000";
 
-            IExternalTaskAPI externalTaskApi = new ExternalTaskApiClientService(client);
-            ExternalTaskWorker testObject = new ExternalTaskWorker(externalTaskApi);
+            testObject = new ExternalTaskWorker<TestPayload, SampleResult>(
+                url,
+                identity,
+                "TestTopic",
+                10,
+                10000,
+                async (externalTask) =>
+                {
+                    return await this.Callback(externalTask);
+                });
 
-            await testObject.WaitForHandle<TestPayload>(identity, "TestTopic", 10, 10000, async (externalTask) =>
-            {
-                Console.WriteLine(JsonConvert.SerializeObject(externalTask));
+            testObject.Start();
+        }
 
-                await Task.Delay(40000);
+        private Task<ExternalTaskSuccessResult<SampleResult>> Callback(ExternalTask<TestPayload> externalTask)
+        {
+            this.testObject.Stop();
 
-                return new ExternalTaskFinished<TestResult>(externalTask.Id, new TestResult());
+            var samplePayload = new SampleResult();
+
+            return Task.Run<ExternalTaskSuccessResult<SampleResult>>(() => {
+              return new ExternalTaskSuccessResult<SampleResult>(externalTask.Id, samplePayload);
             });
+        }
 
+        private class SampleResult
+        {
+            public string Bla {get; set;} = "Bla";
         }
 
         private class TestIdentity : IIdentity
