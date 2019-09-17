@@ -15,7 +15,7 @@ import {ExternalTaskApiClientService} from './external_task_api_client_service';
 
 const logger: Logger = Logger.createLogger('processengine:external_task:worker');
 
-export class ExternalTaskWorker<TExternalTaskPayload> implements IExternalTaskWorker {
+export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements IExternalTaskWorker {
 
   private readonly _workerId = uuid.v4();
   private readonly lockDuration = 30000;
@@ -24,7 +24,7 @@ export class ExternalTaskWorker<TExternalTaskPayload> implements IExternalTaskWo
   private readonly topic: string;
   private readonly maxTasks: number;
   private readonly longpollingTimeout: number;
-  private readonly processingFunction: HandleExternalTaskAction<TExternalTaskPayload>;
+  private readonly processingFunction: HandleExternalTaskAction<TExternalTaskPayload, TResultPayload>;
 
   private _pollingActive: boolean = false;
   private externalTaskClient: ExternalTaskApiClientService;
@@ -35,7 +35,7 @@ export class ExternalTaskWorker<TExternalTaskPayload> implements IExternalTaskWo
     topic: string,
     maxTasks: number,
     longpollingTimeout: number,
-    processingFunction: HandleExternalTaskAction<TExternalTaskPayload>,
+    processingFunction: HandleExternalTaskAction<TExternalTaskPayload, TResultPayload>,
   ) {
     this.processEngineUrl = processEngineUrl;
     this.identity = identity;
@@ -142,7 +142,7 @@ export class ExternalTaskWorker<TExternalTaskPayload> implements IExternalTaskWo
       } else if (result instanceof DataModels.ExternalTask.ExternalTaskServiceError) {
         await this.externalTaskClient.handleServiceError(identity, this.workerId, externalTask.id, result.errorMessage, result.errorDetails);
       } else {
-        const resultAsSuccess = result as DataModels.ExternalTask.ExternalTaskSuccessResult<TExternalTaskPayload>;
+        const resultAsSuccess = result as DataModels.ExternalTask.ExternalTaskSuccessResult;
 
         await this
           .externalTaskClient
