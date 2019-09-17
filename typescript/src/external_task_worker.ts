@@ -137,17 +137,7 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
       const result = await this.processingFunction(externalTask);
       clearInterval(interval);
 
-      if (result instanceof DataModels.ExternalTask.ExternalTaskBpmnError) {
-        await this.externalTaskClient.handleBpmnError(identity, this.workerId, externalTask.id, result.errorCode);
-      } else if (result instanceof DataModels.ExternalTask.ExternalTaskServiceError) {
-        await this.externalTaskClient.handleServiceError(identity, this.workerId, externalTask.id, result.errorMessage, result.errorDetails);
-      } else {
-        const resultAsSuccess = result as DataModels.ExternalTask.ExternalTaskSuccessResult;
-
-        await this
-          .externalTaskClient
-          .finishExternalTask(identity, this.workerId, externalTask.id, resultAsSuccess.result);
-      }
+      await this.processResult(identity, result, externalTask.id);
 
     } catch (error) {
       logger.error('Failed to execute ExternalTask!', error.message, error.stack);
@@ -162,6 +152,26 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
       // This can happen, if the lock-extension was performed after the task was already finished.
       // Since this isn't really an error, a warning suffices here.
       logger.warn(`An error occured while trying to extend the lock for ExternalTask ${externalTask.id}`, error.message, error.stack);
+    }
+  }
+
+  private async processResult(identity: IIdentity, result: DataModels.ExternalTask.ExternalTaskResultBase, externalTaskId: string): Promise<void> {
+
+    if (result instanceof DataModels.ExternalTask.ExternalTaskBpmnError) {
+      const bpmnError = result as DataModels.ExternalTask.ExternalTaskBpmnError;
+      await this.externalTaskClient.handleBpmnError(identity, this.workerId, externalTaskId, bpmnError.errorCode);
+
+    } else if (result instanceof DataModels.ExternalTask.ExternalTaskServiceError) {
+
+      const serviceError = result as DataModels.ExternalTask.ExternalTaskServiceError;
+      await this
+        .externalTaskClient
+        .handleServiceError(identity, this.workerId, externalTaskId, serviceError.errorMessage, serviceError.errorDetails);
+
+    } else {
+      await this
+        .externalTaskClient
+        .finishExternalTask(identity, this.workerId, externalTaskId, (result as DataModels.ExternalTask.ExternalTaskSuccessResult).result);
     }
   }
 
