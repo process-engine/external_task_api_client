@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <Version>2.0.0</Version>
+        <Version>3.0.0</Version>
         <RootNamespace>ProcessEngine.ExternalTaskAPI.Client</RootNamespace>
         <AssemblyName>ProcessEngine.ExternalTaskAPI.Client</AssemblyName>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -15,12 +15,13 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>ExternalTaskAPI;5Minds</PackageTags>
         <PackageLicenseUrl />
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="EssentialProjects.IAM.Contracts" Version="0.1.3" />
-        <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-        <PackageReference Include="ProcessEngine.ExternalTaskAPI.Contracts" Version="6.0.0" />
+        <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+        <PackageReference Include="ProcessEngine.ConsumerAPI.Contracts" Version="14.1.0-feature-make-external-task-worker-immutable" />
     </ItemGroup>
 
 </Project>
