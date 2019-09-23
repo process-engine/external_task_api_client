@@ -13,8 +13,13 @@ def cleanup_workspace() {
   }
 }
 
+def buildIsRequired = true
+
 pipeline {
   agent any
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+  }
   tools {
     nodejs "node-lts"
   }
@@ -24,7 +29,30 @@ pipeline {
   }
 
   stages {
+    stage('Check if build is required') {
+      steps {
+        script {
+          // Taken from https://stackoverflow.com/questions/37755586/how-do-you-pull-git-committer-information-for-jenkins-pipeline
+          sh 'git --no-pager show -s --format=\'%an\' > commit-author.txt'
+          def commitAuthorName = readFile('commit-author.txt').trim()
+
+          def ciUserName = "admin"
+
+          echo(commitAuthorName)
+          echo("Commiter is process-engine-ci: ${commitAuthorName == ciUserName}")
+
+          buildIsRequired = commitAuthorName != ciUserName
+
+          if (!buildIsRequired) {
+            echo("Commit was made by process-engine-ci. Skipping build.")
+          }
+        }
+      }
+    }
     stage('Install dependencies') {
+      when {
+        expression {buildIsRequired == true}
+      }
       steps {
         dir('typescript') {
           nodejs(configId: env.NPM_RC_FILE, nodeJSInstallationName: env.NODE_JS_VERSION) {
@@ -35,6 +63,9 @@ pipeline {
       }
     }
     stage('Build Sources') {
+      when {
+        expression {buildIsRequired == true}
+      }
       steps {
         dir('typescript') {
           sh('node --version')
@@ -43,6 +74,9 @@ pipeline {
       }
     }
     stage('Test') {
+      when {
+        expression {buildIsRequired == true}
+      }
       parallel {
         stage('Lint sources') {
           steps {
@@ -63,6 +97,9 @@ pipeline {
       }
     }
     stage('Set package version') {
+      when {
+        expression {buildIsRequired == true}
+      }
       steps {
         dir('typescript') {
           sh('node --version')
@@ -77,6 +114,9 @@ pipeline {
       }
     }
     stage('Publish') {
+      when {
+        expression {buildIsRequired == true}
+      }
       parallel {
         stage('npm') {
           steps {
@@ -108,6 +148,9 @@ pipeline {
       }
     }
     stage('Cleanup') {
+      when {
+        expression {buildIsRequired == true}
+      }
       steps {
         script {
           // this stage just exists, so the cleanup-work that happens in the post-script
