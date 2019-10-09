@@ -20,12 +20,12 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
   private readonly _workerId = uuid.v4();
   private readonly lockDuration = 30000;
   private readonly processEngineUrl: string;
-  private readonly identity: IIdentity;
   private readonly topic: string;
   private readonly maxTasks: number;
   private readonly longpollingTimeout: number;
   private readonly processingFunction: HandleExternalTaskAction<TExternalTaskPayload, TResultPayload>;
 
+  private _identity: IIdentity;
   private _pollingActive: boolean = false;
   private externalTaskClient: ExternalTaskApiClientService;
 
@@ -45,6 +45,14 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
     this.processingFunction = processingFunction;
 
     this.initialize();
+  }
+
+  public get identity(): IIdentity {
+    return this._identity;
+  }
+
+  public set identity(value: IIdentity) {
+    this._identity = value;
   }
 
   public get workerId(): string {
