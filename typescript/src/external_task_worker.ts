@@ -26,7 +26,7 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
   private readonly processingFunction: HandleExternalTaskAction<TExternalTaskPayload, TResultPayload>;
 
   private _identity: IIdentity;
-  private _pollingActive: boolean = false;
+  private _pollingActive = false;
   private externalTaskClient: ExternalTaskApiClientService;
 
   constructor(
