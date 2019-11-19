@@ -1,6 +1,6 @@
 {
   "name": "@process-engine/external_task_api_client",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "the api-client package for process-engine-consumer",
   "main": "dist/commonjs/index.js",
   "typings": "dist/index.d.ts",
@@ -22,19 +22,18 @@
     "@essential-projects/http_contracts": "^2.3.0",
     "@essential-projects/http": "^2.4.0",
     "@essential-projects/iam_contracts": "^3.4.0",
-    "@process-engine/consumer_api_contracts": "^9.0.0",
+    "@process-engine/consumer_api_contracts": "^9.1.0",
     "async-middleware": "^1.2.1",
     "loggerhythm": "^3.0.3",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
     "@essential-projects/eslint-config": "^1.0.0",
-    "@process-engine/ci_tools": "^2.0.0",
+    "@process-engine/ci_tools": "^2.2.0",
     "@types/express": "^4.16.0",
-    "@types/node": "^10.12.2",
-    "eslint": "^5.16.0",
-    "tsconfig": "^7.0.0",
-    "typescript": "^3.4.5"
+    "@types/node": "^12.11.7",
+    "eslint": "^6.6.0",
+    "typescript": "^3.6.4"
   },
   "scripts": {
     "clean": "rm -rf dist",

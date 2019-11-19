@@ -20,7 +20,6 @@ namespace ProcessEngine.ExternalTaskAPI.Client
     {
         private const int LockDuration = 30000;
         private readonly string ProcessEngineUrl;
-        private readonly IIdentity Identity;
         private readonly string Topic;
         private readonly int MaxTasks;
         private readonly int LongpollingTimeout;
@@ -49,6 +48,12 @@ namespace ProcessEngine.ExternalTaskAPI.Client
 
             this.Initialize();
         }
+
+        /// <summary>
+        /// The identity the worker should use to poll for ExternalTasks.
+        /// </summary>
+        /// <value></value>
+        public IIdentity Identity { get; set;}
 
         /// <summary>
         /// Indicates, if the worker is currently polling for ExternalTasks.
