@@ -73,16 +73,13 @@ class ExternalTaskWorker:
                 self.__lock_duration)
 
         except Exception as exception:
-            print(f'There was an exception as we tried to fetch an lock: "{exception}"')
+            print(
+                f'There was an exception as we tried to fetch an lock: "{exception}"')
 
             await asyncio.sleep(1)
 
             # restart the fetch and lock
-            return await self.__fetch_and_lock_external_tasks(
-                identity,
-                topic_name,
-                max_tasks,
-                long_polling_timeout)
+            return []
 
     def __extend_locks(self, identity, external_tasks):
         """ Uses the External Task API to extend a lock; use this if you need more time to handle the work. """
@@ -121,7 +118,8 @@ class ExternalTaskWorker:
             )
 
         except Exception as exception:
-            print(f'The External Task handle Action caused an Exception: "{exception}"')
+            print(
+                f'The External Task handle Action caused an Exception: "{exception}"')
             print('We will answer with a service error to the ProcessEngine.')
 
             await self.__external_task_api .handle_service_error(
