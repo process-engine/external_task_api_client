@@ -1,0 +1,53 @@
+name: Node CI
+
+on:
+  push:
+    branches:
+      - "*"
+      - "*/*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: "!(contains(github.actor, 'process-engine-ci') || contains(github.actor, 'admin'))"
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Use Node.js 12.x
+      uses: actions/setup-node@v1
+      with:
+        version: 12.x
+
+    - name: 'Change Directory'
+      run: cd typescript
+
+    - name: 'Install Dependencies'
+      run: npm i
+
+    - name: 'Prepare Version'
+      run: ./node_modules/.bin/ci_tools prepare-version --allow-dirty-workdir
+
+    - name: 'Build Sources'
+      run: npm run build
+
+    - name: 'Run Tests'
+      run: npm test
+
+    - name: 'Lint Sources'
+      run: npm run lint
+
+    - name: 'Commit & Tag Version'
+      env:
+        GH_USER: "process-engine-ci"
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        ./node_modules/.bin/ci_tools commit-and-tag-version --only-on-primary-branches
+        ./node_modules/.bin/ci_tools update-github-release --only-on-primary-branches --use-title-and-text-from-git-tag
+
+    - name: 'Publish Version'
+      env:
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: ./node_modules/.bin/ci_tools publish-npm-package --create-tag-from-branch-name
+
