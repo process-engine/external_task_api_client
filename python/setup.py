@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="external_task_api_client",
-    version="2.0.3",
+    version="5346576876576453testversion-versiontest645768798768574635",
     author="Robin Lenz",
     author_email="robin.lenz@5minds.de",
     description="A client for external task api of process-engine.io",

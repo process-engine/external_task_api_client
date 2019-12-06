@@ -1,0 +1,36 @@
+name: Python CI
+
+on:
+  push:
+    branches:
+      - "*"
+      - "*/*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: "!(contains(github.actor, 'process-engine-ci') || contains(github.actor, 'admin'))"
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: 'Prepare Version'
+      working-directory: ./python
+      run: |
+        python3 --version
+        pipenv install
+
+    - name: 'Build'
+      working-directory: ./python
+      run: python3 setup.py sdist bdist_wheel
+
+    - name: 'Publish'
+      working-directory: ./python
+      #if: "contains(github.ref, 'master')"
+      run: |
+        pipenv install twine
+        pipenv run twine upload dist/* && true
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USER }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASS }}
