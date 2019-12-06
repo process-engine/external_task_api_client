@@ -24,6 +24,7 @@ jobs:
       run: |
         python3 --version
         pipenv install
+        pip install wheel
 
     - name: 'Build'
       working-directory: ./python
