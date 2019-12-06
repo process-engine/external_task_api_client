@@ -23,6 +23,7 @@ jobs:
       working-directory: ./python
       run: |
         python3 --version
+        pipenv --python /opt/hostedtoolcache/Python/3.8.0/x64
         pipenv install
 
     - name: 'Build'
