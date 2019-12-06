@@ -16,14 +16,13 @@ jobs:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.8'
+        python-version: '3.7'
     - uses: dschep/install-pipenv-action@v1
 
     - name: 'Prepare Version'
       working-directory: ./python
       run: |
         python3 --version
-        pipenv --python /opt/hostedtoolcache/Python/3.8.0/
         pipenv install
 
     - name: 'Build'
