@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     if: "!(contains(github.actor, 'process-engine-ci') || contains(github.actor, 'admin'))"
 
@@ -19,18 +18,10 @@ jobs:
       working-directory: ./dotnet
       run: npm i
 
-    - name: 'Prepare Version'
+    - name: 'Get Package Version'
       working-directory: ./dotnet
       id: prepare_version
-      run: |
-        dotnet --version
-        dotnet restore src
-        echo "##[set-output name=version;]$(node dotnet-version.js get-package-version)"
-
-    - name: 'Show Version'
-      run: echo $VERSION
-      env:
-        VERSION: ${{ steps.prepare_version.outputs.version }}
+      run: echo "##[set-output name=version;]$(node dotnet-version.js get-package-version)"
 
     - name: 'Get Escaped Branch Name'
       if: "!contains(github.ref, 'master')"
@@ -39,13 +30,6 @@ jobs:
       env:
         BRANCH: ${{ github.ref }}
 
-
-    - name: 'Show Escaped Branch'
-      if: "!contains(github.ref, 'master')"
-      run: echo $BRANCH
-      env:
-        BRANCH: ${{ steps.escaped_branch.outputs.escaped_branch }}
-
     - name: 'Set Package Version'
       working-directory: ./dotnet
       if: "!contains(github.ref, 'master')"
@@ -53,9 +37,11 @@ jobs:
       env:
         NEW_VERSION: ${{ steps.prepare_version.outputs.version }}-${{ steps.escaped_branch.outputs.escaped_branch }}
 
-    - name: 'Build'
+    - name: 'Restore & Build'
       working-directory: ./dotnet
-      run: dotnet build --configuration Release src
+      run: |
+        dotnet restore src
+        dotnet build --configuration Release src
 
     - name: 'Check if package version already exists'
       working-directory: ./dotnet
@@ -67,11 +53,6 @@ jobs:
       run: |
         npm i @process-engine/ci_tools
         echo "##[set-output name=package_published;]$(./node_modules/.bin/is-nuget-package-published $NUGETFEEDURL $PACKAGE $VERSION)"
-
-    - name: 'Log Package Published'
-      run: echo $PUBLISHED
-      env:
-        PUBLISHED: ${{ steps.package_published.outputs.package_published }}
 
     - name: 'Publish Info'
       if: "contains(steps.package_published.outputs.package_published, 'true') && !contains(github.ref, 'master')"
