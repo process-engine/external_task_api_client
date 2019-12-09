@@ -57,7 +57,7 @@ jobs:
       working-directory: ./dotnet
       run: dotnet build --configuration Release src
 
-    - name: 'Check Whether Package is Published'
+    - name: 'Check if package version already exists'
       working-directory: ./dotnet
       id: package_published
       env:
