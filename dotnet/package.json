@@ -1,0 +1,15 @@
+{
+  "name": "dotnet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dotnet-version.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexander Kasten <alexander.kasten@5minds.de>",
+  "license": "ISC",
+  "dependencies": {
+    "xml2json": "^0.11.2",
+    "yargs-parser": "^16.1.0"
+  }
+}

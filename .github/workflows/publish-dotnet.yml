@@ -1,0 +1,70 @@
+name: Dotnet CI
+
+on:
+  push:
+    branches:
+      - "*"
+      - "*/*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "!(contains(github.actor, 'process-engine-ci') || contains(github.actor, 'admin'))"
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: 'Install Dependencies'
+      working-directory: ./dotnet
+      run: npm i
+
+    - name: 'Get Package Version'
+      working-directory: ./dotnet
+      id: prepare_version
+      run: echo "##[set-output name=version;]$(node dotnet-version.js get-package-version)"
+
+    - name: 'Get Escaped Branch Name'
+      if: "!contains(github.ref, 'master')"
+      id: escaped_branch
+      run: echo "##[set-output name=escaped_branch;]$(BRANCH=$BRANCH node --print --eval "process.env.BRANCH.replace('refs/heads/', '').replace('/', '-').replace('_', '-')")"
+      env:
+        BRANCH: ${{ github.ref }}
+
+    - name: 'Set Package Version'
+      working-directory: ./dotnet
+      if: "!contains(github.ref, 'master')"
+      run: node dotnet-version.js set-package-version $NEW_VERSION
+      env:
+        NEW_VERSION: ${{ steps.prepare_version.outputs.version }}-${{ steps.escaped_branch.outputs.escaped_branch }}
+
+    - name: 'Restore & Build'
+      working-directory: ./dotnet
+      run: |
+        dotnet restore src
+        dotnet build --configuration Release src
+
+    - name: 'Check if package version already exists'
+      working-directory: ./dotnet
+      id: package_published
+      env:
+        NUGETFEEDURL: https://5minds.myget.org/F/process_engine_public/api/v3/index.json
+        PACKAGE: ProcessEngine.ExternalTaskAPI.Client
+        VERSION: ${{ steps.prepare_version.outputs.version }}-${{ steps.escaped_branch.outputs.escaped_branch }}
+      run: |
+        npm i @process-engine/ci_tools
+        echo "##[set-output name=package_published;]$(./node_modules/.bin/is-nuget-package-published $NUGETFEEDURL $PACKAGE $VERSION)"
+
+    - name: 'Publish Info'
+      if: "contains(steps.package_published.outputs.package_published, 'true') && !contains(github.ref, 'master')"
+      run: echo "Package version was already published, overriding version."
+
+    - name: 'Publish Info'
+      if: "contains(steps.package_published.outputs.package_published, 'true') && contains(github.ref, 'master')"
+      run: echo "Package version was already published, skipping publish."
+
+    - name: 'Publish'
+      working-directory: ./dotnet
+      if: "!contains(github.ref, 'master') || contains(steps.package_published.outputs.package_published, 'false')"
+      run: dotnet nuget push src/bin/Release/ProcessEngine.ExternalTaskAPI.Client.*.nupkg --api-key $MYGET_TOKEN --source https://5minds.myget.org/F/process_engine_public/api/v2
+      env:
+        MYGET_TOKEN: ${{ secrets.MYGET_TOKEN }}
