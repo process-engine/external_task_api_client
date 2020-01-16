@@ -26,7 +26,7 @@ jobs:
     - name: 'Get Escaped Branch Name'
       if: "!contains(github.ref, 'master')"
       id: escaped_branch
-      run: echo "##[set-output name=escaped_branch;]$(BRANCH=$BRANCH node --print --eval "process.env.BRANCH.replace('refs/heads/', '').replace('/', '-').replace('_', '-')")"
+      run: echo "##[set-output name=escaped_branch;]$(BRANCH=$BRANCH node --print --eval "process.env.BRANCH.replace('refs/heads/', '').replace(/\/|_/g, '-')")"
       env:
         BRANCH: ${{ github.ref }}
 
