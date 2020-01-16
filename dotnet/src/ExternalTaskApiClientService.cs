@@ -90,6 +90,20 @@
             await this.SendPostToExternalTaskApi(identity, uri, request);
         }
 
+        public async Task HandleBpmnError(IIdentity identity, string workerId, string externalTaskId, string errorCode, string errorMessage)
+        {
+            var uri = $"task/{externalTaskId}/handle_bpmn_error";
+
+            var request = new HandleBpmnErrorRequest
+            (
+                workerId,
+                errorCode,
+                errorMessage
+            );
+
+            await this.SendPostToExternalTaskApi(identity, uri, request);
+        }
+
         public async Task HandleServiceError(IIdentity identity, string workerId, string externalTaskId, string errorMessage, string errorDetails)
         {
             var uri = $"task/{externalTaskId}/handle_service_error";
@@ -99,6 +113,21 @@
                 workerId,
                 errorMessage,
                 errorDetails
+            );
+
+            await this.SendPostToExternalTaskApi(identity, uri, request);
+        }
+
+        public async Task HandleServiceError(IIdentity identity, string workerId, string externalTaskId, string errorMessage, string errorDetails, string errorCode)
+        {
+            var uri = $"task/{externalTaskId}/handle_service_error";
+
+            var request = new HandleServiceErrorRequest
+            (
+                workerId,
+                errorMessage,
+                errorDetails,
+                errorCode
             );
 
             await this.SendPostToExternalTaskApi(identity, uri, request);
