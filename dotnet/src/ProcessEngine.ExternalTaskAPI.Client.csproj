@@ -21,7 +21,7 @@
     <ItemGroup>
         <PackageReference Include="EssentialProjects.IAM.Contracts" Version="0.1.3" />
         <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
-        <PackageReference Include="ProcessEngine.ConsumerAPI.Contracts" Version="14.1.0" />
+        <PackageReference Include="ProcessEngine.ConsumerAPI.Contracts" Version="14.3.0-feature-add-optional-message-to-bpmn-error-type" />
     </ItemGroup>
 
 </Project>
