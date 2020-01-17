@@ -37,11 +37,15 @@ export class ExternalTaskApiInternalAccessor implements APIs.IExternalTaskConsum
     return this.externalApiService.extendLock(identity, workerId, externalTaskId, additionalDuration);
   }
 
-  public async handleBpmnError(identity: IIdentity, workerId: string, externalTaskId: string, errorCode: string): Promise<void> {
-
+  public async handleBpmnError(
+    identity: IIdentity,
+    workerId: string,
+    externalTaskId: string,
+    errorCode: string,
+    errorMessage?: string,
+  ): Promise<void> {
     this.ensureIsAuthorized(identity);
-
-    return this.externalApiService.handleBpmnError(identity, workerId, externalTaskId, errorCode);
+    return this.externalApiService.handleBpmnError(identity, workerId, externalTaskId, errorCode, errorMessage);
   }
 
   public async handleServiceError(
@@ -50,11 +54,10 @@ export class ExternalTaskApiInternalAccessor implements APIs.IExternalTaskConsum
     externalTaskId: string,
     errorMessage: string,
     errorDetails: string,
+    errorCode?: string,
   ): Promise<void> {
-
     this.ensureIsAuthorized(identity);
-
-    return this.externalApiService.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
+    return this.externalApiService.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails, errorCode);
   }
 
   public async finishExternalTask<TResultType>(

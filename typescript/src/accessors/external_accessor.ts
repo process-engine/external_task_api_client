@@ -55,7 +55,13 @@ export class ExternalTaskApiExternalAccessor implements APIs.IExternalTaskConsum
     await this.httpClient.post<DataModels.ExternalTask.ExtendLockRequestPayload, void>(url, payload, requestAuthHeaders);
   }
 
-  public async handleBpmnError(identity: IIdentity, workerId: string, externalTaskId: string, errorCode: string): Promise<void> {
+  public async handleBpmnError(
+    identity: IIdentity,
+    workerId: string,
+    externalTaskId: string,
+    errorCode: string,
+    errorMessage?: string,
+  ): Promise<void> {
 
     const requestAuthHeaders = this.createRequestAuthHeaders(identity);
 
@@ -64,7 +70,7 @@ export class ExternalTaskApiExternalAccessor implements APIs.IExternalTaskConsum
 
     url = this.applyBaseUrl(url);
 
-    const payload = new DataModels.ExternalTask.HandleBpmnErrorRequestPayload(workerId, errorCode);
+    const payload = new DataModels.ExternalTask.HandleBpmnErrorRequestPayload(workerId, errorCode, errorMessage);
 
     await this.httpClient.post<DataModels.ExternalTask.HandleBpmnErrorRequestPayload, void>(url, payload, requestAuthHeaders);
   }
@@ -75,6 +81,7 @@ export class ExternalTaskApiExternalAccessor implements APIs.IExternalTaskConsum
     externalTaskId: string,
     errorMessage: string,
     errorDetails: string,
+    errorCode?: string,
   ): Promise<void> {
 
     const requestAuthHeaders = this.createRequestAuthHeaders(identity);
@@ -84,7 +91,7 @@ export class ExternalTaskApiExternalAccessor implements APIs.IExternalTaskConsum
 
     url = this.applyBaseUrl(url);
 
-    const payload = new DataModels.ExternalTask.HandleServiceErrorRequestPayload(workerId, errorMessage, errorDetails);
+    const payload = new DataModels.ExternalTask.HandleServiceErrorRequestPayload(workerId, errorMessage, errorDetails, errorCode);
 
     await this.httpClient.post<DataModels.ExternalTask.HandleServiceErrorRequestPayload, void>(url, payload, requestAuthHeaders);
   }

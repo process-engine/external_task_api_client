@@ -30,8 +30,14 @@ export class ExternalTaskApiClientService implements APIs.IExternalTaskConsumerA
     return this.externalApiAccessor.extendLock(identity, workerId, externalTaskId, additionalDuration);
   }
 
-  public async handleBpmnError(identity: IIdentity, workerId: string, externalTaskId: string, errorCode: string): Promise<void> {
-    return this.externalApiAccessor.handleBpmnError(identity, workerId, externalTaskId, errorCode);
+  public async handleBpmnError(
+    identity: IIdentity,
+    workerId: string,
+    externalTaskId: string,
+    errorCode: string,
+    errorMessage?: string,
+  ): Promise<void> {
+    return this.externalApiAccessor.handleBpmnError(identity, workerId, externalTaskId, errorCode, errorMessage);
   }
 
   public async handleServiceError(
@@ -40,8 +46,9 @@ export class ExternalTaskApiClientService implements APIs.IExternalTaskConsumerA
     externalTaskId: string,
     errorMessage: string,
     errorDetails: string,
+    errorCode?: string,
   ): Promise<void> {
-    return this.externalApiAccessor.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails);
+    return this.externalApiAccessor.handleServiceError(identity, workerId, externalTaskId, errorMessage, errorDetails, errorCode);
   }
 
   public async finishExternalTask<TResultType>(identity: IIdentity, workerId: string, externalTaskId: string, payload: TResultType): Promise<void> {
