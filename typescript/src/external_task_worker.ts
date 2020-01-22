@@ -179,7 +179,7 @@ export class ExternalTaskWorker<TExternalTaskPayload, TResultPayload> implements
     } else {
       await this
         .externalTaskClient
-        .finishExternalTask(identity, this.workerId, externalTaskId, (result as DataModels.ExternalTask.ExternalTaskSuccessResult).result);
+        .finishExternalTask(identity, this.workerId, externalTaskId, (result as DataModels.ExternalTask.ExternalTaskSuccessResult<object>).result);
     }
   }
 
